@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:glowai/features/history/screens/favorite_products_page.dart';
+import 'package:glowai/features/history/screens/saved_looks_screen.dart';
+import 'package:glowai/features/home/screens/home_dashboard.dart';
 import 'package:glowai/features/my_looks/screens/my_looks_screen.dart';
 import 'package:glowai/features/my_looks/services/my_looks_service.dart';
 import 'package:glowai/features/products/screens/recommended_products_page.dart';
@@ -102,6 +105,45 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
         builder: (_) => const MyLooksScreen(),
       ),
     );
+  }
+
+  void _handleNavigation(int index) {
+    if (index == 0) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeDashboard()),
+        (route) => false,
+      );
+      return;
+    }
+
+    if (index == 2) return;
+
+    if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
+      );
+      return;
+    }
+
+    if (index == 4) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
+      );
+      return;
+    }
+
+    final pages = {1: 'Discover', 5: 'Profile'};
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${pages[index]} will be connected soon.'),
+        ),
+      );
   }
 
   Widget _previewCard({
@@ -331,6 +373,49 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 2,
+        onTap: _handleNavigation,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: primary,
+        unselectedItemColor: const Color(0xFF9A9090),
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        showUnselectedLabels: true,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore_outlined),
+            activeIcon: Icon(Icons.explore),
+            label: 'Discover',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.face_retouching_natural_outlined),
+            activeIcon: Icon(Icons.face_retouching_natural),
+            label: 'Try-On',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark_border),
+            activeIcon: Icon(Icons.bookmark),
+            label: 'Saved',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
