@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-
+import 'package:glowai/features/history/screens/favorite_products_page.dart';
 import 'package:glowai/core/theme/app_colors.dart';
 import 'package:glowai/features/history/models/saved_look.dart';
 import 'package:glowai/features/history/services/mock_saved_looks_service.dart';
-
+import 'package:glowai/features/home/screens/home_dashboard.dart';
+import 'package:glowai/features/looks/screens/makeup_look_details_page.dart';
 class SavedLooksScreen extends StatefulWidget {
   const SavedLooksScreen({super.key});
 
@@ -54,26 +55,29 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
 
       setState(() {
         _looks = results;
+        _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
 
       setState(() {
         _errorMessage = 'We could not load your saved looks.';
+        _isLoading = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   void _removeLook(SavedLook look) {
     final index = _looks.indexWhere((item) => item.id == look.id);
 
     if (index == -1) return;
+
+    MockSavedLooksService.removeLook(look);
 
     setState(() {
       _looks.removeAt(index);
@@ -89,6 +93,8 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
           onPressed: () {
             if (!mounted) return;
 
+            MockSavedLooksService.restoreLook(look, index);
+
             setState(() {
               final restoreIndex = index > _looks.length
                   ? _looks.length
@@ -101,56 +107,24 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
       ),
     );
   }
-
-  void _showDetails(SavedLook look) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppColors.white,
-          title: Text(
-            look.title,
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                look.occasion,
-                style: const TextStyle(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                look.description,
-                style: const TextStyle(color: AppColors.secondaryText),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                look.savedLabel,
-                style: const TextStyle(color: AppColors.hintText, fontSize: 12),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text(
-                'Close',
-                style: TextStyle(color: AppColors.accent),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
+void _openLookDetails(SavedLook look) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => MakeupLookDetailsPage(
+        name: look.title,
+        description: look.description,
+        tag: look.occasion,
+        colors: [
+          look.previewColor,
+          AppColors.warmIvory,
+        ],
+        icon: look.previewIcon,
+        occasion: look.occasion,
+      ),
+    ),
+  );
+}
 
   Widget _buildLookCard(SavedLook look) {
     return Material(
@@ -158,7 +132,7 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _showDetails(look),
+        onTap: () => _openLookDetails(look),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
@@ -370,6 +344,29 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
     );
   }
 
+  void _handleNavigation(int index) {
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeDashboard()),
+      );
+      return;
+    }
+    if (index == 3) return;
+
+    if (index == 4) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('This section will be connected soon.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -454,6 +451,7 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 3,
+        onTap: _handleNavigation,
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.white,
         selectedItemColor: AppColors.primary,
@@ -481,6 +479,11 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
             icon: Icon(Icons.bookmark_border),
             activeIcon: Icon(Icons.bookmark),
             label: 'Saved',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Favorites',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
