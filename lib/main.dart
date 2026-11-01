@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:glowai/features/history/screens/saved_looks_screen.dart';
-import 'package:glowai/features/history/screens/favorite_products_page.dart';
+import 'package:glowai/features/home/screens/home_dashboard.dart';
+import 'package:glowai/features/home/screens/occasion_selection_page.dart';
+import 'package:glowai/features/looks/screens/final_makeup_results_page.dart';
+import 'package:glowai/features/products/screens/recommended_products_page.dart';
 
 void main() {
   runApp(const GlowAIApp());
@@ -20,7 +22,16 @@ class GlowAIApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFB76E79)),
         fontFamily: 'Roboto',
       ),
-      home: const SavedLooksScreen(),
-    );
+home: const FinalMakeupResultsPage(
+  name: 'Soft Glam',
+  description: 'A soft glam look with warm tones and a subtle glow.',
+  tag: 'Recommended',
+  colors: [
+    Color(0xFFF3DDE2),
+    Color(0xFFB76E79),
+  ],
+  icon: Icons.auto_awesome,
+  occasion: 'Party',
+),    );
   }
 }

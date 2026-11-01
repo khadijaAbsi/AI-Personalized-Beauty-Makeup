@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:glowai/features/favorites/services/favorites_service.dart';
+import 'package:glowai/features/history/screens/saved_looks_screen.dart';
+import 'package:glowai/features/products/screens/product_details_page.dart';
+import 'package:glowai/features/home/screens/home_dashboard.dart';
 
 class FavoriteProductsPage extends StatefulWidget {
   const FavoriteProductsPage({super.key});
@@ -8,47 +12,107 @@ class FavoriteProductsPage extends StatefulWidget {
 }
 
 class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
-  final List<Map<String, dynamic>> products = [
-    {
-      'name': 'Soft Matte Lipstick',
-      'brand': 'Luxe Beauty',
-      'price': 18.0,
+  static const Color primary = Color(0xFF4A1D3A);
+  static const Color accent = Color(0xFFB76E79);
+  static const Color background = Color(0xFFFFF9F6);
+  void _addTestProduct() {
+    final service = FavoritesService.instance;
+
+    if (service.products.any((product) => product['name'] == 'Test Lipstick')) {
+      return;
+    }
+
+    service.toggleFavorite({
+      'name': 'Test Lipstick',
+      'brand': 'Glow Beauty',
+      'price': 19.99,
+      'description':
+          'This is a test lipstick used to check product details navigation.',
+      'category': 'Makeup',
       'color': const Color(0xFFE8C0B8),
-      'icon': Icons.brush,
-    },
-    {
-      'name': 'Rose Blush',
-      'brand': 'Glow Studio',
-      'price': 24.0,
-      'color': const Color(0xFFF0D1D0),
-      'icon': Icons.face_retouching_natural,
-    },
-    {
-      'name': 'Glow Foundation',
-      'brand': 'Pure Skin',
-      'price': 32.0,
-      'color': const Color(0xFFE8D4C0),
-      'icon': Icons.water_drop_outlined,
-    },
-    {
-      'name': 'Volume Mascara',
-      'brand': 'Lash Lab',
-      'price': 16.0,
-      'color': const Color(0xFFD8C8C7),
-      'icon': Icons.visibility_outlined,
-    },
-  ];
+      'icon': Icons.spa_outlined,
+      'imageUrl': null,
+    });
+  }
+
+  List<Map<String, dynamic>> get products => FavoritesService.instance.products;
+
+  @override
+  void initState() {
+    super.initState();
+    _addTestProduct();
+    FavoritesService.instance.addListener(_onFavoritesChanged);
+  }
+
+  void _onFavoritesChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    FavoritesService.instance.removeListener(_onFavoritesChanged);
+    super.dispose();
+  }
+
+  void _openProduct(Map<String, dynamic> product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductDetailsPage(
+          name: product['name'] as String? ?? 'Product',
+          brand: product['brand'] as String? ?? '',
+          price: (product['price'] as num? ?? 0).toDouble(),
+          description:
+              product['description'] as String? ?? 'No description available.',
+          category: product['category'] as String? ?? 'Beauty',
+          imageUrl: product['imageUrl'] as String?,
+        ),
+      ),
+    );
+  }
+
+  void _openSavedLooks() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
+    );
+  }
+
+  void _handleNavigation(int index) {
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeDashboard()),
+      );
+      return;
+    }
+    if (index == 4) return;
+
+    if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('This section will be connected soon.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF9F6),
+      backgroundColor: background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFF9F6),
+        backgroundColor: background,
         elevation: 0,
         leading: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.maybePop(context),
+          icon: const Icon(Icons.arrow_back_ios_new, color: primary),
         ),
         title: const Text(
           'GlowAI',
@@ -62,8 +126,9 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.shopping_bag_outlined),
+            tooltip: 'Saved Looks',
+            onPressed: _openSavedLooks,
+            icon: const Icon(Icons.bookmark_border, color: primary),
           ),
         ],
       ),
@@ -108,12 +173,12 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
           ],
         ),
       ),
-
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
+        currentIndex: 4,
+        onTap: _handleNavigation,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF4A1D3A),
+        selectedItemColor: primary,
         unselectedItemColor: const Color(0xFF9A9090),
         selectedFontSize: 11,
         unselectedFontSize: 11,
@@ -140,6 +205,11 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
             label: 'Saved',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            activeIcon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
             label: 'Profile',
@@ -150,154 +220,170 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product, int index) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: product['color'] as Color,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(18),
-                    ),
-                  ),
-                  child: Icon(
-                    product['icon'] as IconData,
-                    size: 76,
-                    color: const Color(0xFF98636A),
-                  ),
-                ),
-                Positioned(
-                  top: 9,
-                  right: 9,
-                  child: Material(
-                    color: Colors.white,
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      constraints: const BoxConstraints(
-                        minWidth: 38,
-                        minHeight: 38,
-                      ),
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(
-                        Icons.favorite,
-                        color: Color(0xFFB76E79),
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          products.removeAt(index);
-                        });
+    final productColor = product['color'] as Color? ?? const Color(0xFFE8C0B8);
+    final productIcon = product['icon'] as IconData? ?? Icons.spa_outlined;
+    final imageUrl = product['imageUrl'] as String?;
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '${product['name']} removed from favorites',
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => _openProduct(product),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: productColor,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(18),
+                        ),
+                      ),
+                      child: imageUrl != null && imageUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(18),
+                              ),
+                              child: Image.network(
+                                imageUrl,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    productIcon,
+                                    size: 76,
+                                    color: const Color(0xFF98636A),
+                                  );
+                                },
+                              ),
+                            )
+                          : Icon(
+                              productIcon,
+                              size: 76,
+                              color: const Color(0xFF98636A),
                             ),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
                     ),
-                  ),
+                    Positioned(
+                      top: 9,
+                      right: 9,
+                      child: Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(),
+                        child: IconButton(
+                          constraints: const BoxConstraints(
+                            minWidth: 38,
+                            minHeight: 38,
+                          ),
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Remove from favorites',
+                          icon: const Icon(
+                            Icons.favorite,
+                            color: accent,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            final productName =
+                                product['name'] as String? ?? 'Product';
+
+                            FavoritesService.instance.removeAt(index);
+
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '$productName removed from favorites',
+                                  ),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(11, 12, 11, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product['brand'] as String? ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF9A8585),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      product['name'] as String? ?? 'Product',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF392D30),
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Text(
+                      '\$${(product['price'] as num? ?? 0).toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(11, 12, 11, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product['brand'] as String,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF9A8585),
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  product['name'] as String,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF392D30),
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  '\$${(product['price'] as double).toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFB76E79),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.favorite_border, size: 65, color: Color(0xFFB76E79)),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.favorite_border, size: 65, color: accent),
+          SizedBox(height: 16),
+          Text(
             'No favorites yet',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF392D30),
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Your favorite products will appear here.',
             textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                products.addAll([
-                  {
-                    'name': 'Soft Matte Lipstick',
-                    'brand': 'Luxe Beauty',
-                    'price': 18.0,
-                    'color': const Color(0xFFE8C0B8),
-                    'icon': Icons.brush,
-                  },
-                  {
-                    'name': 'Rose Blush',
-                    'brand': 'Glow Studio',
-                    'price': 24.0,
-                    'color': const Color(0xFFF0D1D0),
-                    'icon': Icons.face_retouching_natural,
-                  },
-                ]);
-              });
-            },
-            child: const Text('Explore favorites'),
+            style: TextStyle(color: Color(0xFF8D7D7D)),
           ),
         ],
       ),
