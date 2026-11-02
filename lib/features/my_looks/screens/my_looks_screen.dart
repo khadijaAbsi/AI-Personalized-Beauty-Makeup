@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:glowai/core/theme/app_colors.dart';
 import 'package:glowai/features/my_looks/models/my_look.dart';
 import 'package:glowai/features/my_looks/services/my_looks_service.dart';
 

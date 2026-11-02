@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:glowai/features/favorites/services/favorites_service.dart';
 import 'package:glowai/features/products/screens/product_details_page.dart';
-import 'package:glowai/features/history/screens/favorite_products_page.dart';
-import 'package:glowai/features/history/screens/saved_looks_screen.dart';
-import 'package:glowai/features/home/screens/home_dashboard.dart';
+import 'package:glowai/core/routing/app_router.dart';
 
 class RecommendedProductsPage extends StatefulWidget {
   const RecommendedProductsPage({super.key});
@@ -169,42 +167,31 @@ class _RecommendedProductsPageState extends State<RecommendedProductsPage> {
   }
 
   void _handleNavigation(int index) {
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeDashboard()),
-      );
-      return;
-    }
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeDashboard()),
-      );
-      return;
-    }
-    // Discover is the current page.
-    if (index == 1) return;
+    switch (index) {
+      case 0: // Home
+        Navigator.pushReplacementNamed(context, AppRouter.home);
+        break;
 
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
-      );
-      return;
-    }
+      case 1: // Discover
+        // Already on Discover (Recommended Products).
+        break;
 
-    if (index == 4) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
-      );
-      return;
-    }
+      case 2: // Try-On
+        Navigator.pushNamed(context, AppRouter.faceAnalysisGuide);
+        break;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('This section will be connected soon.')),
-    );
+      case 3: // Saved Looks
+        Navigator.pushReplacementNamed(context, AppRouter.savedLooks);
+        break;
+
+      case 4: // Favorites
+        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
+        break;
+
+      case 5: // Profile
+        Navigator.pushNamed(context, AppRouter.profile);
+        break;
+    }
   }
 
   @override
@@ -260,7 +247,7 @@ class _RecommendedProductsPageState extends State<RecommendedProductsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
                 itemCount: _categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final category = _categories[index];
                   final isSelected = selectedCategory == category;
@@ -387,7 +374,7 @@ class _RecommendedProductsPageState extends State<RecommendedProductsPage> {
                         ? Image.network(
                             imageUrl,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) {
+                            errorBuilder: (_, _, _) {
                               return Icon(productIcon, size: 70, color: accent);
                             },
                           )

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:glowai/features/favorites/services/favorites_service.dart';
 import 'package:glowai/features/history/screens/saved_looks_screen.dart';
 import 'package:glowai/features/products/screens/product_details_page.dart';
-import 'package:glowai/features/home/screens/home_dashboard.dart';
+import 'package:glowai/core/routing/app_router.dart';
 
 class FavoriteProductsPage extends StatefulWidget {
   const FavoriteProductsPage({super.key});
@@ -81,26 +81,31 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
   }
 
   void _handleNavigation(int index) {
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeDashboard()),
-      );
-      return;
-    }
-    if (index == 4) return;
+    switch (index) {
+      case 0: // Home
+        Navigator.pushReplacementNamed(context, AppRouter.home);
+        break;
 
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
-      );
-      return;
-    }
+      case 1: // Discover
+        Navigator.pushNamed(context, AppRouter.chooseOccasion);
+        break;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('This section will be connected soon.')),
-    );
+      case 2: // Try-On
+        Navigator.pushNamed(context, AppRouter.faceAnalysisGuide);
+        break;
+
+      case 3: // Saved Looks
+        Navigator.pushReplacementNamed(context, AppRouter.savedLooks);
+        break;
+
+      case 4: // Favorites
+        // Already on Favorites.
+        break;
+
+      case 5: // Profile
+        Navigator.pushNamed(context, AppRouter.profile);
+        break;
+    }
   }
 
   @override

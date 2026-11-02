@@ -10,36 +10,36 @@ class RecommendedLooksGallery extends StatelessWidget {
   static const Color primary = Color(0xFF4A1D3A);
   static const Color accent = Color(0xFFB76E79);
   static const Color background = Color(0xFFFFF9F6);
- 
-Future<void> _toggleLook(
-  BuildContext context,
-  Map<String, dynamic> look,
-) async {
-  final colors = look['colors'] as List<Color>;
-  final title = look['name'] as String;
 
-  final wasSaved = MockSavedLooksService.isSaved(title, occasion);
+  Future<void> _toggleLook(
+    BuildContext context,
+    Map<String, dynamic> look,
+  ) async {
+    final colors = look['colors'] as List<Color>;
+    final title = look['name'] as String;
 
-  await MockSavedLooksService.toggleSaveLook(
-    title: title,
-    occasion: occasion,
-    description: look['description'] as String,
-    previewColor: colors.first,
-    previewIcon: look['icon'] as IconData,
-  );
+    final wasSaved = MockSavedLooksService.isSaved(title, occasion);
 
-  if (!context.mounted) return;
+    await MockSavedLooksService.toggleSaveLook(
+      title: title,
+      occasion: occasion,
+      description: look['description'] as String,
+      previewColor: colors.first,
+      previewIcon: look['icon'] as IconData,
+    );
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        wasSaved
-            ? '$title removed from Saved Looks'
-            : '$title saved to Saved Looks',
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          wasSaved
+              ? '$title removed from Saved Looks'
+              : '$title saved to Saved Looks',
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   List<Map<String, dynamic>> get looks {
     switch (occasion.toLowerCase()) {
@@ -250,23 +250,29 @@ Future<void> _toggleLook(
                                   ),
                                   child: Stack(
                                     children: [
-
                                       Positioned(
                                         top: 10,
                                         right: 10,
                                         child: ValueListenableBuilder<int>(
-                                          valueListenable: MockSavedLooksService.changes,
+                                          valueListenable:
+                                              MockSavedLooksService.changes,
                                           builder: (context, version, child) {
-                                            final isSaved = MockSavedLooksService.isSaved(
-                                              look['name'] as String,
-                                              occasion,
-                                            );
+                                            final isSaved =
+                                                MockSavedLooksService.isSaved(
+                                                  look['name'] as String,
+                                                  occasion,
+                                                );
 
                                             return IconButton(
-                                              tooltip: isSaved ? 'Remove from Saved Looks' : 'Save look',
-                                              onPressed: () => _toggleLook(context, look),
+                                              tooltip: isSaved
+                                                  ? 'Remove from Saved Looks'
+                                                  : 'Save look',
+                                              onPressed: () =>
+                                                  _toggleLook(context, look),
                                               icon: Icon(
-                                                isSaved ? Icons.bookmark : Icons.bookmark_border,
+                                                isSaved
+                                                    ? Icons.bookmark
+                                                    : Icons.bookmark_border,
                                               ),
                                               style: IconButton.styleFrom(
                                                 backgroundColor: Colors.white,

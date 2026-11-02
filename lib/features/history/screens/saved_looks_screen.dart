@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:glowai/features/history/screens/favorite_products_page.dart';
 import 'package:glowai/core/theme/app_colors.dart';
 import 'package:glowai/features/history/models/saved_look.dart';
 import 'package:glowai/features/history/services/mock_saved_looks_service.dart';
-import 'package:glowai/features/home/screens/home_dashboard.dart';
 import 'package:glowai/features/looks/screens/makeup_look_details_page.dart';
+import 'package:glowai/core/routing/app_router.dart';
+
 class SavedLooksScreen extends StatefulWidget {
   const SavedLooksScreen({super.key});
 
@@ -107,24 +107,22 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
       ),
     );
   }
-void _openLookDetails(SavedLook look) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => MakeupLookDetailsPage(
-        name: look.title,
-        description: look.description,
-        tag: look.occasion,
-        colors: [
-          look.previewColor,
-          AppColors.warmIvory,
-        ],
-        icon: look.previewIcon,
-        occasion: look.occasion,
+
+  void _openLookDetails(SavedLook look) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MakeupLookDetailsPage(
+          name: look.title,
+          description: look.description,
+          tag: look.occasion,
+          colors: [look.previewColor, AppColors.warmIvory],
+          icon: look.previewIcon,
+          occasion: look.occasion,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildLookCard(SavedLook look) {
     return Material(
@@ -345,26 +343,31 @@ void _openLookDetails(SavedLook look) {
   }
 
   void _handleNavigation(int index) {
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeDashboard()),
-      );
-      return;
-    }
-    if (index == 3) return;
+    switch (index) {
+      case 0: // Home
+        Navigator.pushReplacementNamed(context, AppRouter.home);
+        break;
 
-    if (index == 4) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
-      );
-      return;
-    }
+      case 1: // Discover
+        Navigator.pushNamed(context, AppRouter.chooseOccasion);
+        break;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('This section will be connected soon.')),
-    );
+      case 2: // Try-On
+        Navigator.pushNamed(context, AppRouter.faceAnalysisGuide);
+        break;
+
+      case 3: // Saved Looks
+        // Already on Saved Looks.
+        break;
+
+      case 4: // Favorites
+        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
+        break;
+
+      case 5: // Profile
+        Navigator.pushNamed(context, AppRouter.profile);
+        break;
+    }
   }
 
   @override

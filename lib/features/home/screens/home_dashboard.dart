@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:glowai/features/history/screens/favorite_products_page.dart';
-import 'package:glowai/features/history/screens/saved_looks_screen.dart';
 import 'package:glowai/features/home/screens/occasion_selection_page.dart';
 import 'package:glowai/features/looks/screens/makeup_look_details_page.dart';
 import 'package:glowai/features/history/services/mock_saved_looks_service.dart';
+import 'package:glowai/core/routing/app_router.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
@@ -12,12 +11,6 @@ class HomeDashboard extends StatelessWidget {
   static const Color accent = Color(0xFFB76E79);
   static const Color background = Color(0xFFFFF9F7);
   static const Color textColor = Color(0xFF30272B);
-
-  void _showComingSoon(BuildContext context, String page) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$page will be connected soon.')));
-  }
 
   Future<void> _toggleLook(
     BuildContext context, {
@@ -49,28 +42,56 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
+  // void _handleNavigation(BuildContext context, int index) {
+  //   if (index == 0) return;
+
+  //   if (index == 3) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
+  //     );
+  //     return;
+  //   }
+
+  //   if (index == 4) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
+  //     );
+  //     return;
+  //   }
+
+  //   final pages = {1: 'Discover', 2: 'Try-On', 5: 'Profile'};
+
+  //   _showComingSoon(context, pages[index] ?? 'This section');
+  // }
+
   void _handleNavigation(BuildContext context, int index) {
-    if (index == 0) return;
+    switch (index) {
+      case 0:
+        // Already on Home Dashboard.
+        return;
 
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
-      );
-      return;
+      case 1:
+        Navigator.pushNamed(context, AppRouter.chooseOccasion);
+        break;
+
+      case 2:
+        Navigator.pushNamed(context, AppRouter.faceAnalysisGuide);
+        break;
+
+      case 3:
+        Navigator.pushReplacementNamed(context, AppRouter.savedLooks);
+        break;
+
+      case 4:
+        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
+        break;
+
+      case 5:
+        Navigator.pushNamed(context, AppRouter.profile);
+        break;
     }
-
-    if (index == 4) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
-      );
-      return;
-    }
-
-    final pages = {1: 'Discover', 2: 'Try-On', 5: 'Profile'};
-
-    _showComingSoon(context, pages[index] ?? 'This section');
   }
 
   @override
@@ -148,7 +169,7 @@ class HomeDashboard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(26),
                       boxShadow: [
                         BoxShadow(
-                          color: primary.withOpacity(0.16),
+                          color: primary.withValues(alpha: 0.16),
                           blurRadius: 18,
                           offset: const Offset(0, 8),
                         ),
@@ -161,7 +182,7 @@ class HomeDashboard extends StatelessWidget {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.13),
+                            color: Colors.white.withValues(alpha: 0.13),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: const Icon(
@@ -187,15 +208,19 @@ class HomeDashboard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.6,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                         ),
                         const SizedBox(height: 22),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: () =>
-                                _showComingSoon(context, 'Face analysis'),
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRouter.faceAnalysisGuide,
+                              );
+                            },
                             icon: const Icon(Icons.auto_awesome),
                             label: const Text('Analyze My Face'),
                             style: ElevatedButton.styleFrom(
@@ -463,7 +488,9 @@ class HomeDashboard extends StatelessWidget {
                         );
 
                         return IconButton(
-                          tooltip: isSaved ? 'Remove from Saved Looks' : 'Save look',
+                          tooltip: isSaved
+                              ? 'Remove from Saved Looks'
+                              : 'Save look',
                           onPressed: () {
                             _toggleLook(
                               context,
@@ -493,7 +520,7 @@ class HomeDashboard extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -510,7 +537,7 @@ class HomeDashboard extends StatelessWidget {
                     child: Icon(
                       icon,
                       size: 58,
-                      color: primary.withOpacity(0.7),
+                      color: primary.withValues(alpha: 0.7),
                     ),
                   ),
                   Positioned(
@@ -519,7 +546,7 @@ class HomeDashboard extends StatelessWidget {
                     child: Icon(
                       Icons.arrow_outward,
                       size: 19,
-                      color: primary.withOpacity(0.8),
+                      color: primary.withValues(alpha: 0.8),
                     ),
                   ),
                 ],

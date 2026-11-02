@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:glowai/features/history/screens/favorite_products_page.dart';
-import 'package:glowai/features/history/screens/saved_looks_screen.dart';
-import 'package:glowai/features/home/screens/home_dashboard.dart';
 import 'package:glowai/features/my_looks/screens/my_looks_screen.dart';
 import 'package:glowai/features/my_looks/services/my_looks_service.dart';
 import 'package:glowai/features/products/screens/recommended_products_page.dart';
+import 'package:glowai/core/routing/app_router.dart';
 
 class FinalMakeupResultsPage extends StatefulWidget {
   const FinalMakeupResultsPage({
@@ -50,9 +48,7 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
 
     if (_isSaved) {
       final look = MyLooksService.myLooks.where(
-        (item) =>
-            item.title == widget.name &&
-            item.occasion == widget.occasion,
+        (item) => item.title == widget.name && item.occasion == widget.occasion,
       );
 
       if (look.isNotEmpty) {
@@ -85,9 +81,9 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
         _isSaving = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Look saved to My Looks!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Look saved to My Looks!')));
     }
   }
 
@@ -101,49 +97,40 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
   void _viewMyLooks() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const MyLooksScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const MyLooksScreen()),
     );
   }
 
   void _handleNavigation(int index) {
-    if (index == 0) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeDashboard()),
-        (route) => false,
-      );
-      return;
+    switch (index) {
+      case 0: // Home
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRouter.home,
+          (route) => false,
+        );
+        break;
+
+      case 1: // Discover
+        Navigator.pushNamed(context, AppRouter.chooseOccasion);
+        break;
+
+      case 2: // Try-On
+        // Already on the Try-On results page.
+        break;
+
+      case 3: // Saved Looks
+        Navigator.pushReplacementNamed(context, AppRouter.savedLooks);
+        break;
+
+      case 4: // Favorites
+        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
+        break;
+
+      case 5: // Profile
+        Navigator.pushNamed(context, AppRouter.profile);
+        break;
     }
-
-    if (index == 2) return;
-
-    if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
-      );
-      return;
-    }
-
-    if (index == 4) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
-      );
-      return;
-    }
-
-    final pages = {1: 'Discover', 5: 'Profile'};
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('${pages[index]} will be connected soon.'),
-        ),
-      );
   }
 
   Widget _previewCard({
@@ -214,15 +201,15 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
                   style: TextButton.styleFrom(
                     backgroundColor: const Color(0xFFF1E5E9),
                     foregroundColor: primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  icon: const Icon(
-                    Icons.bookmark_rounded,
-                    size: 18,
-                  ),
+                  icon: const Icon(Icons.bookmark_rounded, size: 18),
                   label: Text(
                     '$count',
                     style: const TextStyle(
@@ -330,15 +317,13 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _isSaving ? null : _saveLook,
-                  icon: Icon(
-                    _isSaved ? Icons.bookmark : Icons.bookmark_border,
-                  ),
+                  icon: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_border),
                   label: Text(
                     _isSaving
                         ? 'Saving...'
                         : _isSaved
-                            ? 'Saved to My Looks'
-                            : 'Save Look',
+                        ? 'Saved to My Looks'
+                        : 'Save Look',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isSaved ? accent : primary,
