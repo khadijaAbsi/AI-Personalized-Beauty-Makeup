@@ -9,8 +9,7 @@ import 'package:glowai/features/face_analysis/services/mock_face_analysis_result
 import 'package:glowai/features/face_analysis/widgets/face_shape_illustration.dart';
 import 'package:glowai/features/face_analysis/widgets/portrait_message_card.dart';
 import 'package:glowai/features/face_analysis/widgets/skin_tone_swatch.dart';
-import 'package:glowai/features/occasion/screens/choose_occasion_placeholder_screen.dart';
-
+import 'package:glowai/features/home/screens/occasion_selection_page.dart';
 import 'helpers/analysis_test_helpers.dart';
 
 Object? _occasionArguments;
@@ -259,16 +258,15 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Continue opens the Choose Your Occasion placeholder',
+    testWidgets('Continue opens the real Occasion Selection page',
         (tester) async {
       await _pump(tester);
 
       await _tapContinue(tester);
       await tester.pumpAndSettle();
 
-      expect(find.byType(ChooseOccasionPlaceholderScreen), findsOneWidget);
-      expect(find.text('Choose Your Occasion'), findsOneWidget);
-      expect(find.text('Occasion selection is coming soon.'), findsOneWidget);
+      expect(find.byType(OccasionSelectionPage), findsOneWidget);
+      expect(find.byType(OccasionSelectionPage), findsOneWidget);
     });
 
     testWidgets('the result and portrait are passed on to the next step',
@@ -293,7 +291,7 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ChooseOccasionPlaceholderScreen), findsNothing);
+      expect(find.byType(OccasionSelectionPage), findsNothing);
       expect(find.byType(FaceAnalysisResultsScreen), findsOneWidget);
       expect(find.text('Oval'), findsOneWidget);
     });
@@ -307,12 +305,12 @@ void main() {
       await tester.tap(_continue);
       await tester.tap(_continue, warnIfMissed: false);
       await tester.pumpAndSettle();
-      expect(find.byType(ChooseOccasionPlaceholderScreen), findsOneWidget);
+      expect(find.byType(OccasionSelectionPage), findsOneWidget);
 
       // One Back is enough to get back, so only one screen was pushed.
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
-      expect(find.byType(ChooseOccasionPlaceholderScreen), findsNothing);
+      expect(find.byType(OccasionSelectionPage), findsNothing);
       expect(find.byType(FaceAnalysisResultsScreen), findsOneWidget);
     });
 
@@ -326,7 +324,7 @@ void main() {
       await _tapContinue(tester);
       await tester.pumpAndSettle();
 
-      expect(find.byType(ChooseOccasionPlaceholderScreen), findsOneWidget);
+      expect(find.byType(OccasionSelectionPage), findsOneWidget);
     });
 
     testWidgets('rebuilding Results keeps it showing the same result',

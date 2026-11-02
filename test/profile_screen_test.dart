@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-// Replace `glowai` with the `name:` in your pubspec.yaml if it differs.
 import 'package:glowai/core/routing/app_router.dart';
 import 'package:glowai/features/face_analysis/models/face_analysis_result.dart';
 import 'package:glowai/features/face_analysis/screens/face_analysis_guide_screen.dart';
 import 'package:glowai/features/face_analysis/widgets/skin_tone_swatch.dart';
 import 'package:glowai/features/profile/models/user_profile.dart';
-import 'package:glowai/features/profile/screens/profile_placeholder_screen.dart';
+import 'package:glowai/features/history/screens/saved_looks_screen.dart';
+import 'package:glowai/features/history/screens/favorite_products_page.dart';
 import 'package:glowai/features/profile/screens/profile_screen.dart';
 import 'package:glowai/features/profile/screens/settings_privacy_screen.dart';
 import 'package:glowai/features/profile/services/mock_user_profile.dart';
@@ -52,7 +52,10 @@ Future<FakeProfileService> _pumpLoaded(
   await tester.pumpWidget(const SizedBox());
   final service = FakeProfileService();
   await tester.pumpWidget(
-    _app(textScale: textScale, home: ProfileScreen(profileService: service)),
+    _app(
+      textScale: textScale,
+      home: ProfileScreen(profileService: service),
+    ),
   );
   service.complete(profile);
   await _settle(tester);
@@ -70,11 +73,14 @@ Finder get _retry => find.widgetWithText(FilledButton, 'Retry');
 
 void main() {
   group('loading', () {
-    testWidgets('shows a spinner (and the back button) until data arrives',
-        (tester) async {
+    testWidgets('shows a spinner (and the back button) until data arrives', (
+      tester,
+    ) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Loading your profile'), findsOneWidget);
@@ -106,8 +112,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('shows the face analysis, labelled as sample data',
-        (tester) async {
+    testWidgets('shows the face analysis, labelled as sample data', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, mockUserProfile);
 
       expect(find.text('My face analysis'), findsOneWidget);
@@ -119,13 +126,18 @@ void main() {
       expect(find.text('Undertone'), findsOneWidget);
       expect(find.text('Warm'), findsOneWidget);
 
-      final swatch =
-          tester.widget<DecoratedBox>(find.byKey(SkinToneSwatch.colorKey));
-      expect((swatch.decoration as BoxDecoration).color, const Color(0xFFD8A17E));
+      final swatch = tester.widget<DecoratedBox>(
+        find.byKey(SkinToneSwatch.colorKey),
+      );
+      expect(
+        (swatch.decoration as BoxDecoration).color,
+        const Color(0xFFD8A17E),
+      );
     });
 
-    testWidgets('shows the saved looks and favorite products counts',
-        (tester) async {
+    testWidgets('shows the saved looks and favorite products counts', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, mockUserProfile);
 
       expect(find.text('12'), findsOneWidget);
@@ -158,8 +170,7 @@ void main() {
   });
 
   group('missing optional fields', () {
-    testWidgets('a profile with only an id still shows safely',
-        (tester) async {
+    testWidgets('a profile with only an id still shows safely', (tester) async {
       await _pumpLoaded(tester, minimalProfile);
 
       expect(find.text('Your profile'), findsOneWidget); // no name
@@ -177,8 +188,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a partly filled analysis says what is not available',
-        (tester) async {
+    testWidgets('a partly filled analysis says what is not available', (
+      tester,
+    ) async {
       await _pumpLoaded(
         tester,
         const UserProfile(
@@ -188,13 +200,17 @@ void main() {
       );
 
       expect(find.text('Oval'), findsOneWidget);
-      expect(find.text('Not available'), findsNWidgets(2)); // skin tone, undertone
+      expect(
+        find.text('Not available'),
+        findsNWidgets(2),
+      ); // skin tone, undertone
       expect(find.byType(SkinToneSwatch), findsNothing);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('an avatar address that cannot load falls back safely',
-        (tester) async {
+    testWidgets('an avatar address that cannot load falls back safely', (
+      tester,
+    ) async {
       await _pumpLoaded(
         tester,
         const UserProfile(
@@ -220,11 +236,14 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('a failed load shows a friendly message and Retry',
-        (tester) async {
+    testWidgets('a failed load shows a friendly message and Retry', (
+      tester,
+    ) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
 
       service.fail();
       await _settle(tester);
@@ -238,7 +257,9 @@ void main() {
     testWidgets("the service's own message is shown", (tester) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
 
       service.fail(const ProfileException('You appear to be offline.'));
       await _settle(tester);
@@ -246,11 +267,14 @@ void main() {
       expect(find.text('You appear to be offline.'), findsOneWidget);
     });
 
-    testWidgets('an unexpected error still shows the friendly message',
-        (tester) async {
+    testWidgets('an unexpected error still shows the friendly message', (
+      tester,
+    ) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
 
       service.fail(StateError('boom'));
       await _settle(tester);
@@ -262,7 +286,9 @@ void main() {
     testWidgets('Retry loads again once and can succeed', (tester) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
       service.fail();
       await _settle(tester);
 
@@ -282,7 +308,9 @@ void main() {
     testWidgets('Retry can fail again and be retried again', (tester) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
       service.fail();
       await _settle(tester);
 
@@ -303,10 +331,7 @@ void main() {
       final service = await _pumpLoaded(tester, mockUserProfile);
 
       await tester.pumpWidget(
-        _app(
-          textScale: 1.3,
-          home: ProfileScreen(profileService: service),
-        ),
+        _app(textScale: 1.3, home: ProfileScreen(profileService: service)),
       );
       await tester.pump();
 
@@ -314,11 +339,14 @@ void main() {
       expect(find.text('Layla'), findsOneWidget);
     });
 
-    testWidgets('a result arriving after the screen closed is ignored',
-        (tester) async {
+    testWidgets('a result arriving after the screen closed is ignored', (
+      tester,
+    ) async {
       _useScreen(tester, const Size(390, 844));
       final service = FakeProfileService();
-      await tester.pumpWidget(_app(home: ProfileScreen(profileService: service)));
+      await tester.pumpWidget(
+        _app(home: ProfileScreen(profileService: service)),
+      );
 
       await tester.pumpWidget(const SizedBox());
       service.complete(mockUserProfile);
@@ -328,57 +356,73 @@ void main() {
     });
   });
 
-  group('placeholder navigation', () {
-    testWidgets('Saved looks opens a labelled placeholder, and Back returns',
-        (tester) async {
+  group('profile navigation', () {
+    testWidgets('Saved looks opens the real screen, and Back returns', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, mockUserProfile);
 
+      // Navigate from Profile to Saved Looks.
       await _tapText(tester, 'Saved looks');
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProfilePlaceholderScreen), findsOneWidget);
-      expect(find.text('Saved looks'), findsOneWidget);
-      expect(find.text('Temporary placeholder'), findsOneWidget);
+      // Verify the real Saved Looks screen opened.
+      expect(find.byType(SavedLooksScreen), findsOneWidget);
+      expect(find.byType(ProfileScreen), findsNothing);
 
-      await tester.tap(find.byTooltip('Back'));
+      // Navigate back to Profile.
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.byType(ProfilePlaceholderScreen), findsNothing);
+
+      // Verify that we returned to Profile.
+      expect(find.byType(SavedLooksScreen), findsNothing);
+      expect(find.byType(ProfileScreen), findsOneWidget);
       expect(find.text('Layla'), findsOneWidget);
     });
 
-    testWidgets('Favorite products opens a labelled placeholder',
-        (tester) async {
+    testWidgets('Favorite products opens the real screen and Back returns', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, mockUserProfile);
 
       await _tapText(tester, 'Favorite products');
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProfilePlaceholderScreen), findsOneWidget);
-      expect(find.text('Favorite products'), findsOneWidget);
-      expect(find.text('Temporary placeholder'), findsOneWidget);
-    });
+      expect(find.byType(FavoriteProductsPage), findsOneWidget);
+      expect(find.byType(ProfileScreen), findsNothing);
 
-    testWidgets('Settings & Privacy opens the settings screen and Back returns',
-        (tester) async {
-      await _pumpLoaded(tester, mockUserProfile);
-
-      await _tapText(tester, 'Settings & Privacy');
+      await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
 
-      expect(find.byType(SettingsPrivacyScreen), findsOneWidget);
-      expect(find.text('Account settings'), findsOneWidget);
-      expect(find.text('Privacy controls'), findsOneWidget);
-      expect(find.text('Log out'), findsOneWidget);
-      expect(find.text('Coming soon'), findsNWidgets(3));
-
-      await tester.tap(find.byTooltip('Back'));
-      await tester.pumpAndSettle();
-      expect(find.byType(SettingsPrivacyScreen), findsNothing);
+      expect(find.byType(FavoriteProductsPage), findsNothing);
+      expect(find.byType(ProfileScreen), findsOneWidget);
       expect(find.text('Layla'), findsOneWidget);
     });
 
-    testWidgets('nothing on the settings screen pretends to work',
-        (tester) async {
+    testWidgets(
+      'Settings & Privacy opens the settings screen and Back returns',
+      (tester) async {
+        await _pumpLoaded(tester, mockUserProfile);
+
+        await _tapText(tester, 'Settings & Privacy');
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SettingsPrivacyScreen), findsOneWidget);
+        expect(find.text('Account settings'), findsOneWidget);
+        expect(find.text('Privacy controls'), findsOneWidget);
+        expect(find.text('Log out'), findsOneWidget);
+        expect(find.text('Coming soon'), findsNWidgets(3));
+
+        await tester.tap(find.byTooltip('Back'));
+        await tester.pumpAndSettle();
+        expect(find.byType(SettingsPrivacyScreen), findsNothing);
+        expect(find.text('Layla'), findsOneWidget);
+      },
+    );
+
+    testWidgets('nothing on the settings screen pretends to work', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, mockUserProfile);
       await _tapText(tester, 'Settings & Privacy');
       await tester.pumpAndSettle();
@@ -403,8 +447,9 @@ void main() {
       expect(find.text('Profile editing is coming soon.'), findsOneWidget);
     });
 
-    testWidgets('"Analyze my face" opens the Face Analysis Guide',
-        (tester) async {
+    testWidgets('"Analyze my face" opens the Face Analysis Guide', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, minimalProfile);
 
       await _tapText(tester, 'Analyze my face');
@@ -416,17 +461,17 @@ void main() {
 
   group('back navigation and the /profile route', () {
     Widget homeThatOpensProfile(FakeProfileService service) => Builder(
-          builder: (context) => Scaffold(
-            body: TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => ProfileScreen(profileService: service),
-                ),
-              ),
-              child: const Text('Open profile'),
+      builder: (context) => Scaffold(
+        body: TextButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => ProfileScreen(profileService: service),
             ),
           ),
-        );
+          child: const Text('Open profile'),
+        ),
+      ),
+    );
 
     testWidgets('Back returns to the previous screen', (tester) async {
       _useScreen(tester, const Size(390, 844));
@@ -448,8 +493,9 @@ void main() {
       expect(find.text('Open profile'), findsOneWidget);
     });
 
-    testWidgets('Back is safe when Profile is the first screen',
-        (tester) async {
+    testWidgets('Back is safe when Profile is the first screen', (
+      tester,
+    ) async {
       await _pumpLoaded(tester, mockUserProfile);
 
       await tester.tap(find.byTooltip('Back'));
@@ -509,8 +555,9 @@ void main() {
       }
     }
 
-    testWidgets('the missing-data, empty and error layouts also fit',
-        (tester) async {
+    testWidgets('the missing-data, empty and error layouts also fit', (
+      tester,
+    ) async {
       const size = Size(320, 480);
       await _pumpLoaded(tester, minimalProfile, size: size, textScale: 2.0);
       expect(tester.takeException(), isNull);

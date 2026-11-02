@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 import 'core/constants/app_constants.dart';
@@ -13,8 +14,11 @@ class GlowAiApp extends StatelessWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      // initialRoute: AppRouter.signup,
-      initialRoute: AppRouter.faceAnalysisGuide,
+
+      // TEMPORARY: Open dashboard while authentication
+      // is not connected to Supabase.
+      initialRoute: AppRouter.home,
+
       onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
