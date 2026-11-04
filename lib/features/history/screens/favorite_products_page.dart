@@ -15,24 +15,24 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
   static const Color primary = Color(0xFF4A1D3A);
   static const Color accent = Color(0xFFB76E79);
   static const Color background = Color(0xFFFFF9F6);
-  void _addTestProduct() {
-    final service = FavoritesService.instance;
+  bool _isLoading = true;
+  String? _errorMessage;
 
-    if (service.products.any((product) => product['name'] == 'Test Lipstick')) {
-      return;
+  Future<void> _loadFavorites() async {
+    try {
+      await FavoritesService.instance.ensureLoaded(refresh: true);
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Could not load your favorite products.';
+      });
     }
-
-    service.toggleFavorite({
-      'name': 'Test Lipstick',
-      'brand': 'Glow Beauty',
-      'price': 19.99,
-      'description':
-          'This is a test lipstick used to check product details navigation.',
-      'category': 'Makeup',
-      'color': const Color(0xFFE8C0B8),
-      'icon': Icons.spa_outlined,
-      'imageUrl': null,
-    });
   }
 
   List<Map<String, dynamic>> get products => FavoritesService.instance.products;
@@ -40,7 +40,7 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
   @override
   void initState() {
     super.initState();
-    _addTestProduct();
+    _loadFavorites();
     FavoritesService.instance.addListener(_onFavoritesChanged);
   }
 
@@ -157,7 +157,16 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
             ),
             const SizedBox(height: 22),
             Expanded(
-              child: products.isEmpty
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                  ? Center(
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Text(_errorMessage!),
+                        TextButton(onPressed: _loadFavorites, child: const Text('Retry')),
+                      ]),
+                    )
+                  : products.isEmpty
                   ? _buildEmptyState()
                   : GridView.builder(
                       itemCount: products.length,
@@ -302,22 +311,20 @@ class _FavoriteProductsPageState extends State<FavoriteProductsPage> {
                             color: accent,
                             size: 20,
                           ),
-                          onPressed: () {
-                            final productName =
-                                product['name'] as String? ?? 'Product';
-
-                            FavoritesService.instance.removeAt(index);
-
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '$productName removed from favorites',
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
+                          onPressed: () async {
+                            final productName = product['name'] as String? ?? 'Product';
+                            try {
+                              await FavoritesService.instance.removeAt(index);
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$productName removed from favorites')),
                               );
+                            } catch (_) {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Could not remove favorite.')),
+                              );
+                            }
                           },
                         ),
                       ),

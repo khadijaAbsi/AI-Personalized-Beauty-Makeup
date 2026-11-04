@@ -35,6 +35,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   void initState() {
     super.initState();
     FavoritesService.instance.addListener(_onFavoritesChanged);
+    FavoritesService.instance.ensureLoaded().catchError((Object _) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load favorites.')),
+      );
+    });
   }
 
   void _onFavoritesChanged() {
@@ -49,28 +55,32 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     super.dispose();
   }
 
-  void _toggleFavorite() {
-    final wasFavorite = isFavorite;
-
-    FavoritesService.instance.toggleFavorite({
-      'name': widget.name,
-      'brand': widget.brand,
-      'price': widget.price,
-      'color': const Color(0xFFE8C0B8),
-      'icon': Icons.brush,
-      'category': widget.category,
-      'imageUrl': widget.imageUrl,
-      'description': widget.description,
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          wasFavorite ? 'Removed from favorites' : 'Added to favorites',
-        ),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+  Future<void> _toggleFavorite() async {
+    try {
+      await FavoritesService.instance.ensureLoaded();
+      final wasFavorite = isFavorite;
+      await FavoritesService.instance.toggleFavorite({
+        'name': widget.name,
+        'brand': widget.brand,
+        'price': widget.price,
+        'color': const Color(0xFFE8C0B8),
+        'icon': Icons.brush,
+        'category': widget.category,
+        'imageUrl': widget.imageUrl,
+        'description': widget.description,
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(wasFavorite
+            ? 'Removed from favorites' : 'Added to favorites'),
+            duration: const Duration(seconds: 1)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update favorites.')),
+      );
+    }
   }
 
   @override

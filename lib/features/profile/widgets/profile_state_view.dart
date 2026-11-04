@@ -7,12 +7,12 @@ import '../../../shared/widgets/primary_button.dart';
 /// Centered view for the Profile screen's loading, empty and error states.
 class ProfileStateView extends StatelessWidget {
   const ProfileStateView.loading({super.key})
-      : icon = null,
-        title = 'Loading your profile',
-        message = null,
-        actionLabel = null,
-        onAction = null,
-        isLoading = true;
+    : icon = null,
+      title = 'Loading your profile',
+      message = null,
+      actionLabel = null,
+      onAction = null,
+      isLoading = true;
 
   const ProfileStateView({
     super.key,
@@ -53,11 +53,17 @@ class ProfileStateView extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: isLoading ? textTheme.titleMedium : textTheme.headlineMedium,
+                style: isLoading
+                    ? textTheme.titleMedium
+                    : textTheme.headlineMedium,
               ),
               if (message != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                Text(message, textAlign: TextAlign.center, style: textTheme.bodyMedium),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium,
+                ),
               ],
               if (actionLabel != null) ...[
                 const SizedBox(height: AppSpacing.lg),

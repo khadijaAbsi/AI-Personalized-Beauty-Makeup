@@ -44,8 +44,9 @@ class TermsCheckbox extends StatelessWidget {
                       value: value,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
-                      onChanged:
-                          enabled ? (checked) => onChanged(checked ?? false) : null,
+                      onChanged: enabled
+                          ? (checked) => onChanged(checked ?? false)
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -62,8 +63,9 @@ class TermsCheckbox extends StatelessWidget {
             padding: const EdgeInsets.only(left: 36),
             child: Text(
               _errorText,
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.error),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
             ),
           ),
       ],

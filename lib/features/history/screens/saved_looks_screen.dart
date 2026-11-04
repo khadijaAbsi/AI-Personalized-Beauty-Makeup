@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:glowai/core/theme/app_colors.dart';
 import 'package:glowai/features/history/models/saved_look.dart';
-import 'package:glowai/features/history/services/mock_saved_looks_service.dart';
+import 'package:glowai/features/history/services/saved_looks_service.dart';
 import 'package:glowai/features/looks/screens/makeup_look_details_page.dart';
 import 'package:glowai/core/routing/app_router.dart';
 
@@ -13,7 +13,7 @@ class SavedLooksScreen extends StatefulWidget {
 }
 
 class _SavedLooksScreenState extends State<SavedLooksScreen> {
-  final MockSavedLooksService _service = MockSavedLooksService();
+  final SavedLooksService _service = SavedLooksService();
 
   final List<String> _filters = const [
     'All',
@@ -72,40 +72,39 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
     super.didChangeDependencies();
   }
 
-  void _removeLook(SavedLook look) {
+  Future<void> _removeLook(SavedLook look) async {
     final index = _looks.indexWhere((item) => item.id == look.id);
-
     if (index == -1) return;
-
-    MockSavedLooksService.removeLook(look);
-
-    setState(() {
-      _looks.removeAt(index);
-    });
-
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${look.title} removed from Saved Looks'),
-        action: SnackBarAction(
-          label: 'UNDO',
-          onPressed: () {
-            if (!mounted) return;
-
-            MockSavedLooksService.restoreLook(look, index);
-
-            setState(() {
-              final restoreIndex = index > _looks.length
-                  ? _looks.length
-                  : index;
-
-              _looks.insert(restoreIndex, look);
-            });
-          },
+    try {
+      await SavedLooksService.removeLook(look);
+      if (!mounted) return;
+      setState(() => _looks.removeWhere((item) => item.id == look.id));
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${look.title} removed from Saved Looks'),
+          action: SnackBarAction(
+            label: 'UNDO',
+            onPressed: () async {
+              try {
+                await SavedLooksService.restoreLook(look, index);
+                if (mounted) await _loadLooks();
+              } catch (_) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Could not restore look.')),
+                );
+              }
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not remove saved look.')),
+      );
+    }
   }
 
   void _openLookDetails(SavedLook look) {

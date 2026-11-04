@@ -5,9 +5,10 @@ import '../../../core/routing/app_router.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../../shared/widgets/circle_back_button.dart';
 import '../../../shared/widgets/secondary_button.dart';
+import '../../auth/services/auth_service.dart';
 import '../models/user_profile.dart';
-import '../services/mock_profile_service.dart';
 import '../services/profile_service.dart';
+import '../services/supabase_profile_service.dart';
 import '../widgets/profile_analysis_card.dart';
 import '../widgets/profile_header.dart';
 import '../widgets/profile_state_view.dart';
@@ -15,16 +16,12 @@ import '../widgets/profile_stat_card.dart';
 
 enum _ProfileStatus { loading, loaded, empty, error }
 
-/// The user's profile. The data comes from a [ProfileService] (a mock for
-/// now); the screen only displays it and handles loading, empty and error
-/// states. It loads once when opened and never reloads on rebuild.
-///
-/// Open it with `Navigator.of(context).pushNamed(AppRouter.profile)`.
+/// Account-specific profile. ProfileService injection is preserved for tests.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, this.profileService});
+  const ProfileScreen({super.key, this.profileService, this.authService});
 
-  /// Defaults to [MockProfileService]. Pass the real service later.
   final ProfileService? profileService;
+  final SupabaseAuthService? authService;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -32,13 +29,15 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileService _service =
-      widget.profileService ?? MockProfileService();
+      widget.profileService ?? SupabaseProfileService();
+  late final SupabaseAuthService _authService =
+      widget.authService ?? SupabaseAuthService();
 
   _ProfileStatus _status = _ProfileStatus.loading;
   UserProfile? _profile;
   String _errorMessage = ProfileException.defaultMessage;
-
   bool _isLoading = false;
+  bool _isLoggingOut = false;
   int _requestId = 0;
 
   @override
@@ -48,14 +47,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _load() async {
-    if (_isLoading) return; // never two loads at once
+    if (_isLoading) return;
     _isLoading = true;
     final requestId = ++_requestId;
-
     if (_status != _ProfileStatus.loading) {
       setState(() => _status = _ProfileStatus.loading);
     }
-
     try {
       final profile = await _service.loadProfile();
       if (!mounted || requestId != _requestId) return;
@@ -80,10 +77,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _open(String route) => Navigator.of(context).pushNamed(route);
+  /// Reload counts after the user returns from Saved Looks or Favorites.
+  Future<void> _open(String route) async {
+    await Navigator.of(context).pushNamed(route);
+    if (!mounted) return;
+    if (route == AppRouter.savedLooks || route == AppRouter.favoriteProducts) {
+      await _load();
+    }
+  }
 
   void _editProfile() =>
       showAppSnackBar(context, 'Profile editing is coming soon.');
+
+  Future<void> _logout() async {
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
+    try {
+      await _authService.signOut();
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRouter.login,
+        (route) => false,
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, e.message, isError: true);
+    } catch (_) {
+      if (!mounted) return;
+      showAppSnackBar(context, 'Unable to log out. Please try again.',
+          isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoggingOut = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,10 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const Padding(
               padding: EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
+                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0,
               ),
               child: Align(
                 alignment: Alignment.centerLeft,
@@ -138,10 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfile(UserProfile profile) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.lg,
+        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,8 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onAnalyze: () => _open(AppRouter.faceAnalysisGuide),
           ),
           const SizedBox(height: AppSpacing.md),
-          // IntrinsicHeight lets both cards share the taller one's height
-          // (a stretched Row can't do that inside a scrolling Column).
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -181,6 +199,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SecondaryButton(
             label: 'Settings & Privacy',
             onPressed: () => _open(AppRouter.settingsPrivacy),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SecondaryButton(
+            label: _isLoggingOut ? 'Logging out...' : 'Log Out',
+            onPressed: _isLoggingOut ? null : _logout,
           ),
         ],
       ),

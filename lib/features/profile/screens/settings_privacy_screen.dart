@@ -57,7 +57,8 @@ class SettingsPrivacyScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     for (var i = 0; i < _plannedEntries.length; i++) ...[
-                      if (i > 0) const Divider(height: 1, color: AppColors.border),
+                      if (i > 0)
+                        const Divider(height: 1, color: AppColors.border),
                       _PlannedEntry(
                         icon: _plannedEntries[i].$1,
                         label: _plannedEntries[i].$2,

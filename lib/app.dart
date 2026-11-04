@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'core/constants/app_constants.dart';
@@ -17,7 +16,7 @@ class GlowAiApp extends StatelessWidget {
 
       // TEMPORARY: Open dashboard while authentication
       // is not connected to Supabase.
-      initialRoute: AppRouter.home,
+      initialRoute: AppRouter.authGate,
 
       onGenerateRoute: AppRouter.onGenerateRoute,
     );

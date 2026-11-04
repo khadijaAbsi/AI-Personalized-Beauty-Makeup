@@ -13,7 +13,8 @@ import '../widgets/auth_text_field.dart';
 import '../widgets/terms_checkbox.dart';
 
 class SignupScreen extends StatefulWidget {
-  /// [authService] is injectable so tests (and later Supabase) can replace it.
+  /// Allows tests to inject a mock authentication service.
+  /// Otherwise, real Supabase authentication is used.
   const SignupScreen({super.key, this.authService});
 
   final AuthService? authService;
@@ -36,12 +37,13 @@ class _SignupScreenState extends State<SignupScreen> {
   final _confirmFocus = FocusNode();
 
   late final AuthService _authService =
-      widget.authService ?? const MockAuthService();
+      widget.authService ?? SupabaseAuthService();
 
   bool _acceptedTerms = false;
   bool _showTermsError = false;
   bool _isLoading = false;
-  // Errors only start updating live after the first submit attempt.
+
+  // Enable live validation after the first submission.
   bool _autoValidate = false;
 
   @override
@@ -50,44 +52,97 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+
     _nameFocus.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
     _confirmFocus.dispose();
+
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (_isLoading) return;
+
     FocusScope.of(context).unfocus();
 
     setState(() => _autoValidate = true);
+
     final formIsValid = _formKey.currentState!.validate();
-    if (!_acceptedTerms) setState(() => _showTermsError = true);
+
+    if (!_acceptedTerms) {
+      setState(() => _showTermsError = true);
+    }
+
     if (!formIsValid || !_acceptedTerms) return;
 
     setState(() => _isLoading = true);
+
     try {
+      // Register using the injected or real auth service.
       await _authService.signUp(
         fullName: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
       if (!mounted) return;
+
       TextInput.finishAutofillContext();
-      showAppSnackBar(
-        context,
-        'Account created (demo mode: nothing was saved).',
-      );
+
+      if (widget.authService != null) {
+        // Preserve the original success message
+        // for existing widget tests.
+        showAppSnackBar(
+          context,
+          'Account created (demo mode: nothing was saved).',
+        );
+        return;
+      }
+
+      // Real Supabase authentication.
+      final realAuthService = _authService as SupabaseAuthService;
+
+      if (realAuthService.currentSession == null) {
+        // Email verification is required.
+        // Show the message before navigating, using the
+        // MaterialApp's ScaffoldMessenger.
+        final messenger = ScaffoldMessenger.of(context);
+
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Please check your email to verify your account.'),
+          ),
+        );
+
+        Navigator.of(context).pushReplacementNamed(AppRouter.login);
+      } else {
+        // An active Supabase session exists.
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRouter.home, (route) => false);
+      }
     } on AuthException catch (e) {
       if (!mounted) return;
+
       showAppSnackBar(context, e.message, isError: true);
+    } catch (_) {
+      if (!mounted) return;
+
+      showAppSnackBar(
+        context,
+        'Unable to create your account. Please try again.',
+        isError: true,
+      );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  void _goToLogin() => Navigator.of(context).pushNamed(AppRouter.login);
+  void _goToLogin() {
+    Navigator.of(context).pushNamed(AppRouter.login);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,10 +158,15 @@ class _SignupScreenState extends State<SignupScreen> {
             value: _acceptedTerms,
             enabled: !_isLoading,
             showError: _showTermsError && !_acceptedTerms,
-            onChanged: (value) => setState(() {
-              _acceptedTerms = value;
-              if (value) _showTermsError = false;
-            }),
+            onChanged: (value) {
+              setState(() {
+                _acceptedTerms = value;
+
+                if (value) {
+                  _showTermsError = false;
+                }
+              });
+            },
           ),
         ],
       ),

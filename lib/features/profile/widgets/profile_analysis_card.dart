@@ -47,7 +47,10 @@ class ProfileAnalysisCard extends StatelessWidget {
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.xs),
-            TextButton(onPressed: onAnalyze, child: const Text('Analyze my face')),
+            TextButton(
+              onPressed: onAnalyze,
+              child: const Text('Analyze my face'),
+            ),
           ] else ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
