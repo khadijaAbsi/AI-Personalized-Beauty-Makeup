@@ -2,8 +2,10 @@ import '../models/user_profile.dart';
 import 'mock_user_profile.dart';
 import 'profile_service.dart';
 
-/// Frontend-only stand-in: returns sample data after a short delay (so the
-/// loading state is visible). It does not know who is signed in.
+/// Mock profile implementation used for widget tests.
+///
+/// Does not communicate with Supabase.
+/// Returns sample information after an optional delay.
 class MockProfileService implements ProfileService {
   MockProfileService({
     this.profile = mockUserProfile,
@@ -11,14 +13,15 @@ class MockProfileService implements ProfileService {
     this.failFirstAttempts = 0,
   });
 
-  /// What to return. Pass `profile: null` to simulate "no profile yet".
+  /// Profile returned by the mock service.
+  ///
+  /// Set to null to simulate an empty profile.
   final UserProfile? profile;
 
-  /// Simulated loading time. Use [Duration.zero] in tests (no timer is made).
+  /// Simulated loading delay.
   final Duration delay;
 
-  /// Makes the first N loads throw, for trying the error state and Retry by
-  /// hand, e.g. `MockProfileService(failFirstAttempts: 1)`.
+  /// Simulate failures during the first N requests.
   final int failFirstAttempts;
 
   int _loads = 0;
@@ -26,8 +29,15 @@ class MockProfileService implements ProfileService {
   @override
   Future<UserProfile?> loadProfile() async {
     _loads++;
-    if (delay > Duration.zero) await Future<void>.delayed(delay);
-    if (_loads <= failFirstAttempts) throw const ProfileException();
+
+    if (delay > Duration.zero) {
+      await Future<void>.delayed(delay);
+    }
+
+    if (_loads <= failFirstAttempts) {
+      throw const ProfileException();
+    }
+
     return profile;
   }
 }

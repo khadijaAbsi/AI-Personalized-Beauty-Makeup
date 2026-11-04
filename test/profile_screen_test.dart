@@ -5,8 +5,6 @@ import 'package:glowai/features/face_analysis/models/face_analysis_result.dart';
 import 'package:glowai/features/face_analysis/screens/face_analysis_guide_screen.dart';
 import 'package:glowai/features/face_analysis/widgets/skin_tone_swatch.dart';
 import 'package:glowai/features/profile/models/user_profile.dart';
-import 'package:glowai/features/history/screens/saved_looks_screen.dart';
-import 'package:glowai/features/history/screens/favorite_products_page.dart';
 import 'package:glowai/features/profile/screens/profile_screen.dart';
 import 'package:glowai/features/profile/screens/settings_privacy_screen.dart';
 import 'package:glowai/features/profile/services/mock_user_profile.dart';
@@ -14,9 +12,36 @@ import 'package:glowai/features/profile/services/profile_service.dart';
 
 import 'helpers/profile_test_helpers.dart';
 
-Widget _app({required Widget home, double textScale = 1.0}) {
+Widget _app({
+  required Widget home,
+  double textScale = 1.0,
+  ProfileService? routeProfileService,
+  bool stubSavedItemRoutes = false,
+}) {
   return MaterialApp(
-    onGenerateRoute: AppRouter.onGenerateRoute,
+    onGenerateRoute: (settings) {
+      // For the named-route test, inject controlled profile data rather than
+      // requiring a live Supabase session.
+      if (settings.name == AppRouter.profile && routeProfileService != null) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => ProfileScreen(profileService: routeProfileService),
+        );
+      }
+      // Navigation-only tests should not require live Supabase requests.
+      if (stubSavedItemRoutes &&
+          (settings.name == AppRouter.savedLooks ||
+              settings.name == AppRouter.favoriteProducts)) {
+        final label = settings.name == AppRouter.savedLooks
+            ? 'Saved Looks test destination'
+            : 'Favorite Products test destination';
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => Scaffold(body: Center(child: Text(label))),
+        );
+      }
+      return AppRouter.onGenerateRoute(settings);
+    },
     builder: (context, child) => MediaQuery(
       data: MediaQuery.of(context)
           .copyWith(textScaler: TextScaler.linear(textScale)),
@@ -45,6 +70,7 @@ Future<FakeProfileService> _pumpLoaded(
   UserProfile? profile, {
   Size size = const Size(390, 844),
   double textScale = 1.0,
+  bool stubSavedItemRoutes = false,
 }) async {
   _useScreen(tester, size);
   // Start from an empty tree so each call gets a brand-new screen State
@@ -54,6 +80,7 @@ Future<FakeProfileService> _pumpLoaded(
   await tester.pumpWidget(
     _app(
       textScale: textScale,
+      stubSavedItemRoutes: stubSavedItemRoutes,
       home: ProfileScreen(profileService: service),
     ),
   );
@@ -70,6 +97,94 @@ Future<void> _tapText(WidgetTester tester, String text) async {
 }
 
 Finder get _retry => find.widgetWithText(FilledButton, 'Retry');
+
+/// Opens a Saved Looks / Favorite Products route from Profile, goes Back, and
+/// checks that Profile comes back and refreshes its counts.
+///
+/// Why this needs a second `service.complete(...)`:
+/// `ProfileScreen._open()` deliberately calls `_load()` again after the pushed
+/// route is popped, so the counts are fresh when the user returns. That second
+/// load goes through [FakeProfileService], whose loads stay pending until the
+/// test completes them. If the test never completes it, Profile correctly stays
+/// on its loading spinner and the name (and counts) are not on screen.
+Future<void> _expectSavedItemRouteRoundTrip(
+  WidgetTester tester, {
+  required String tapLabel,
+  required String destinationText,
+  required String oldCount,
+  required String newCount,
+  required UserProfile refreshedProfile,
+}) async {
+  // Keep the service: it is the only way to finish the reload after Back.
+  final service = await _pumpLoaded(
+    tester,
+    mockUserProfile,
+    stubSavedItemRoutes: true,
+  );
+  expect(service.loadCalls, 1);
+  expect(find.text(oldCount), findsOneWidget);
+
+  // Remember this exact State so we can show Back returns to the SAME Profile
+  // screen (kept alive under the pushed route), not a freshly built one.
+  final profileStateBefore = tester.state<State<ProfileScreen>>(
+    find.byType(ProfileScreen),
+  );
+
+  // Open the destination. Profile is loaded and idle here (nothing animates
+  // forever), so pumpAndSettle is safe and waits for the whole route
+  // transition, however long this Flutter version makes it.
+  await _tapText(tester, tapLabel);
+  await tester.pumpAndSettle();
+
+  expect(find.text(destinationText), findsOneWidget);
+  expect(service.loadCalls, 1); // no reload while the destination is open
+
+  final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+  expect(navigator.canPop(), isTrue);
+
+  // Back. Popping completes the pushNamed future inside `_open`; one pump lets
+  // that continuation run, which starts the reload.
+  navigator.pop();
+  await tester.pump();
+
+  // The reload is pending, so Profile is on its loading spinner.
+  expect(service.loadCalls, 2);
+  expect(
+    find.byType(CircularProgressIndicator, skipOffstage: false),
+    findsOneWidget,
+  );
+
+  // Finish the reload as the real service would, then let the reverse route
+  // transition finish. pumpAndSettle is safe only now: while the spinner is
+  // showing it would time out, and a fixed pump(400 ms) can stop mid-transition
+  // because the default page-transition duration depends on the Flutter
+  // version.
+  service.complete(refreshedProfile);
+  await tester.pumpAndSettle();
+
+  // Destination is gone (even offstage) and Profile is the current route again,
+  // as the very same State that was kept alive under the pushed route.
+  expect(find.text(destinationText, skipOffstage: false), findsNothing);
+  expect(navigator.canPop(), isFalse);
+  final profileFinder = find.byType(ProfileScreen, skipOffstage: false);
+  expect(profileFinder, findsOneWidget);
+  expect(ModalRoute.of(tester.element(profileFinder))?.isCurrent, isTrue);
+  expect(
+    identical(
+      tester.state<State<ProfileScreen>>(profileFinder),
+      profileStateBefore,
+    ),
+    isTrue,
+  );
+
+  // The refreshed data is on screen.
+  expect(find.byType(CircularProgressIndicator), findsNothing);
+  expect(find.text('Layla'), findsOneWidget);
+  expect(find.text(newCount), findsOneWidget);
+  expect(find.text(oldCount), findsNothing);
+  expect(service.loadCalls, 2); // exactly one reload, no extra loads
+  expect(tester.takeException(), isNull);
+}
 
 void main() {
   group('loading', () {
@@ -357,46 +472,44 @@ void main() {
   });
 
   group('profile navigation', () {
-    testWidgets('Saved looks opens the real screen, and Back returns', (
-      tester,
-    ) async {
-      await _pumpLoaded(tester, mockUserProfile);
-
-      // Navigate from Profile to Saved Looks.
-      await _tapText(tester, 'Saved looks');
-      await tester.pumpAndSettle();
-
-      // Verify the real Saved Looks screen opened.
-      expect(find.byType(SavedLooksScreen), findsOneWidget);
-      expect(find.byType(ProfileScreen), findsNothing);
-
-      // Navigate back to Profile.
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-
-      // Verify that we returned to Profile.
-      expect(find.byType(SavedLooksScreen), findsNothing);
-      expect(find.byType(ProfileScreen), findsOneWidget);
-      expect(find.text('Layla'), findsOneWidget);
+    testWidgets('Saved looks route opens and Back returns', (tester) async {
+      await _expectSavedItemRouteRoundTrip(
+        tester,
+        tapLabel: 'Saved looks',
+        destinationText: 'Saved Looks test destination',
+        oldCount: '12',
+        newCount: '13',
+        refreshedProfile: UserProfile(
+          id: 'mock-user',
+          name: 'Layla',
+          email: 'layla@example.com',
+          latestFaceAnalysis: mockUserProfile.latestFaceAnalysis,
+          savedLooksCount: 13,
+          favoriteProductsCount: 8,
+          isMock: true,
+        ),
+      );
     });
 
-    testWidgets('Favorite products opens the real screen and Back returns', (
+    testWidgets('Favorite products route opens and Back returns', (
       tester,
     ) async {
-      await _pumpLoaded(tester, mockUserProfile);
-
-      await _tapText(tester, 'Favorite products');
-      await tester.pumpAndSettle();
-
-      expect(find.byType(FavoriteProductsPage), findsOneWidget);
-      expect(find.byType(ProfileScreen), findsNothing);
-
-      await tester.binding.handlePopRoute();
-      await tester.pumpAndSettle();
-
-      expect(find.byType(FavoriteProductsPage), findsNothing);
-      expect(find.byType(ProfileScreen), findsOneWidget);
-      expect(find.text('Layla'), findsOneWidget);
+      await _expectSavedItemRouteRoundTrip(
+        tester,
+        tapLabel: 'Favorite products',
+        destinationText: 'Favorite Products test destination',
+        oldCount: '8',
+        newCount: '9',
+        refreshedProfile: UserProfile(
+          id: 'mock-user',
+          name: 'Layla',
+          email: 'layla@example.com',
+          latestFaceAnalysis: mockUserProfile.latestFaceAnalysis,
+          savedLooksCount: 12,
+          favoriteProductsCount: 9,
+          isMock: true,
+        ),
+      );
     });
 
     testWidgets(
@@ -505,10 +618,15 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('the /profile route shows the sample profile', (tester) async {
+    testWidgets('the /profile route shows the injected sample profile', (
+      tester,
+    ) async {
       _useScreen(tester, const Size(390, 844));
+      final service = FakeProfileService();
+
       await tester.pumpWidget(
         _app(
+          routeProfileService: service,
           home: Builder(
             builder: (context) => Scaffold(
               body: TextButton(
@@ -523,12 +641,17 @@ void main() {
 
       await tester.tap(find.text('Open profile'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 700)); // mock delay
-      await tester.pump();
-
+      // Finish the route transition while the profile is still loading.
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(ProfileScreen), findsOneWidget);
+      expect(service.loadCalls, 1);
+
+      service.complete(mockUserProfile);
+      await _settle(tester);
+
       expect(find.text('Layla'), findsOneWidget);
       expect(find.text('Demo'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

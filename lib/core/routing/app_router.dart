@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // Authentication UI
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/signup_screen.dart';
+import '../../features/auth/screens/auth_gate.dart';
 
 // Face analysis
 import '../../features/face_analysis/models/selected_photo.dart';
@@ -42,6 +43,7 @@ abstract final class AppRouter {
   // Authentication
   static const String signup = '/';
   static const String login = '/login';
+  static const String authGate = '/auth';
 
   // Home
   static const String home = '/home';
@@ -78,6 +80,9 @@ abstract final class AppRouter {
 
       case login:
         return _page(settings, const LoginScreen());
+
+      case authGate:
+        return _page(settings, const AuthGate());
 
       // ---------------------------------
       // HOME DASHBOARD

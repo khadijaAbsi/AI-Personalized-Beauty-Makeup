@@ -1,6 +1,8 @@
 import '../models/user_profile.dart';
 
-/// Thrown when the profile can't be loaded. [message] is safe to show.
+/// Exception thrown when profile loading fails.
+///
+/// The message is safe to display to the user.
 class ProfileException implements Exception {
   const ProfileException([this.message = defaultMessage]);
 
@@ -13,21 +15,16 @@ class ProfileException implements Exception {
   String toString() => 'ProfileException: $message';
 }
 
-/// Loads the profile of the CURRENTLY SIGNED-IN user.
+/// Provides the profile of the currently authenticated user.
 ///
-/// There is deliberately no user-id parameter: an implementation decides whose
-/// profile to load from the authenticated session, so the UI has no way to ask
-/// for someone else's data.
+/// Implementations:
+/// - SupabaseProfileService: real account information.
+/// - MockProfileService: sample data for tests.
 ///
-/// - Returns the profile when there is one.
-/// - Returns null when nothing exists yet (the screen shows an empty state).
-/// - Throws [ProfileException] on failure (the screen shows an error + Retry).
-///
-/// A Supabase implementation would, for example, read
-/// `Supabase.instance.client.auth.currentUser` for the id, then load that
-/// user's profile row, latest face analysis and saved-looks / favorites
-/// counts (with row-level security so only their own rows are readable), and
-/// map them to a [UserProfile].
+/// Returns:
+/// - UserProfile when account information exists.
+/// - null when no profile is available.
+/// - ProfileException when loading fails.
 abstract interface class ProfileService {
   Future<UserProfile?> loadProfile();
 }

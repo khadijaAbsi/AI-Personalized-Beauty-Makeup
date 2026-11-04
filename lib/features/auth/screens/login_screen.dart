@@ -12,7 +12,8 @@ import '../widgets/auth_screen_layout.dart';
 import '../widgets/auth_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
-  /// [authService] is injectable so tests (and later Supabase) can replace it.
+  /// Allows tests to inject a mock authentication service.
+  /// Otherwise, real Supabase authentication is used.
   const LoginScreen({super.key, this.authService});
 
   final AuthService? authService;
@@ -31,49 +32,82 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordFocus = FocusNode();
 
   late final AuthService _authService =
-      widget.authService ?? const MockAuthService();
+      widget.authService ?? SupabaseAuthService();
 
   bool _isLoading = false;
-  // Errors only start updating live after the first submit attempt.
+
+  // Errors update live only after the first submission.
   bool _autoValidate = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+
     _emailFocus.dispose();
     _passwordFocus.dispose();
+
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (_isLoading) return;
+
     FocusScope.of(context).unfocus();
 
     setState(() => _autoValidate = true);
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+
     try {
+      // Authenticate using the injected or real service.
       await _authService.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+
       if (!mounted) return;
+
       TextInput.finishAutofillContext();
-      showAppSnackBar(context, 'Welcome back! (demo mode: no real login yet)');
+
+      if (widget.authService != null) {
+        // Preserve original behavior for injected test services.
+        showAppSnackBar(
+          context,
+          'Welcome back! (demo mode: no real login yet)',
+        );
+      } else {
+        // Real login succeeded.
+        // Remove Login from the navigation stack.
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRouter.home, (route) => false);
+      }
     } on AuthException catch (e) {
       if (!mounted) return;
+
       showAppSnackBar(context, e.message, isError: true);
+    } catch (_) {
+      if (!mounted) return;
+
+      showAppSnackBar(
+        context,
+        'Unable to log in. Please try again.',
+        isError: true,
+      );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  /// In the current flow Login is opened from Create Account, so going back
-  /// to it is a pop. If Login is ever the first screen, open Create Account.
+  /// Return to Signup if it is in the navigation stack.
+  /// Otherwise, navigate to Signup directly.
   void _goToSignup() {
     final navigator = Navigator.of(context);
+
     if (navigator.canPop()) {
       navigator.pop();
     } else {

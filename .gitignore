@@ -46,3 +46,9 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Node.js dependencies
+/node_modules/
+
+# Supabase temporary local files
+/supabase/.temp/

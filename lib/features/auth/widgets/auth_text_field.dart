@@ -49,7 +49,9 @@ class _AuthTextFieldState extends State<AuthTextField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // The field itself carries the label for screen readers.
-        ExcludeSemantics(child: Text(widget.label, style: textTheme.labelMedium)),
+        ExcludeSemantics(
+          child: Text(widget.label, style: textTheme.labelMedium),
+        ),
         const SizedBox(height: 8),
         Semantics(
           label: widget.label,

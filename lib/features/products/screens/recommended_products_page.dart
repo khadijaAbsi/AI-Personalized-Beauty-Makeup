@@ -110,6 +110,12 @@ class _RecommendedProductsPageState extends State<RecommendedProductsPage> {
   void initState() {
     super.initState();
     FavoritesService.instance.addListener(_onFavoritesChanged);
+    FavoritesService.instance.ensureLoaded().catchError((Object _) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not load favorites.')),
+      );
+    });
   }
 
   void _onFavoritesChanged() {
@@ -128,26 +134,29 @@ class _RecommendedProductsPageState extends State<RecommendedProductsPage> {
     return FavoritesService.instance.isFavorite(product['name'] as String);
   }
 
-  void _toggleFavorite(Map<String, dynamic> product) {
-    final wasFavorite = _isFavorite(product);
-
-    FavoritesService.instance.toggleFavorite({
-      ...product,
-      'imageUrl': product['imageUrl'],
-    });
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            wasFavorite
-                ? '${product['name']} removed from favorites'
-                : '${product['name']} added to favorites',
-          ),
+  Future<void> _toggleFavorite(Map<String, dynamic> product) async {
+    try {
+      await FavoritesService.instance.ensureLoaded();
+      final wasFavorite = _isFavorite(product);
+      await FavoritesService.instance.toggleFavorite({
+        ...product,
+        'imageUrl': product['imageUrl'],
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text(wasFavorite
+              ? '${product['name']} removed from favorites'
+              : '${product['name']} added to favorites'),
           duration: const Duration(seconds: 1),
-        ),
+        ));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update favorites. Please retry.')),
       );
+    }
   }
 
   void _openProduct(Map<String, dynamic> product) {

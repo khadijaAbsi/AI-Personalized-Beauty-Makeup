@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:glowai/features/home/screens/occasion_selection_page.dart';
 import 'package:glowai/features/looks/screens/makeup_look_details_page.dart';
-import 'package:glowai/features/history/services/mock_saved_looks_service.dart';
+import 'package:glowai/features/history/services/saved_looks_service.dart';
 import 'package:glowai/core/routing/app_router.dart';
 
 class HomeDashboard extends StatelessWidget {
@@ -19,27 +20,28 @@ class HomeDashboard extends StatelessWidget {
     required Color color,
     required IconData icon,
   }) async {
-    final wasSaved = MockSavedLooksService.isSaved(title, 'Everyday');
-
-    await MockSavedLooksService.toggleSaveLook(
-      title: title,
-      occasion: 'Everyday',
-      description: description,
-      previewColor: color,
-      previewIcon: icon,
-    );
-
-    if (!context.mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          wasSaved
-              ? '$title removed from Saved Looks'
-              : '$title saved to Saved Looks',
-        ),
-      ),
-    );
+    try {
+      await SavedLooksService.ensureLoaded();
+      final wasSaved = SavedLooksService.isSaved(title, 'Everyday');
+      await SavedLooksService.toggleSaveLook(
+        title: title,
+        occasion: 'Everyday',
+        description: description,
+        previewColor: color,
+        previewIcon: icon,
+      );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(wasSaved
+            ? '$title removed from Saved Looks'
+            : '$title saved to Saved Looks')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update Saved Looks. Please try again.')),
+      );
+    }
   }
 
   // void _handleNavigation(BuildContext context, int index) {
@@ -96,6 +98,18 @@ class HomeDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String displayName = 'GlowAI User';
+    try {
+      final name = Supabase.instance.client.auth.currentUser
+          ?.userMetadata?['full_name'];
+      if (name is String && name.trim().isNotEmpty) {
+        displayName = name.trim().split(RegExp(r'\s+')).first;
+      }
+    } catch (_) {
+      // Preview/tests may render the dashboard without Supabase initialized.
+    }
+    final initial = displayName[0].toUpperCase();
+
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
@@ -122,8 +136,8 @@ class HomeDashboard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'Layla',
+                            Text(
+                              displayName,
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
@@ -142,8 +156,8 @@ class HomeDashboard extends StatelessWidget {
                           border: Border.all(color: const Color(0xFFE8CBD5)),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
-                          'L',
+                        child: Text(
+                          initial,
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -479,10 +493,22 @@ class HomeDashboard extends StatelessWidget {
                   Positioned(
                     top: 10,
                     left: 10,
-                    child: ValueListenableBuilder<int>(
-                      valueListenable: MockSavedLooksService.changes,
+                    child: FutureBuilder<void>(
+                      future: SavedLooksService.ensureLoaded(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Icon(Icons.cloud_off_outlined);
+                        }
+                        if (snapshot.connectionState != ConnectionState.done) {
+                          return const SizedBox(
+                            width: 36, height: 36,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        }
+                        return ValueListenableBuilder<int>(
+                      valueListenable: SavedLooksService.changes,
                       builder: (context, version, child) {
-                        final isSaved = MockSavedLooksService.isSaved(
+                        final isSaved = SavedLooksService.isSaved(
                           title,
                           'Everyday',
                         );
@@ -507,6 +533,8 @@ class HomeDashboard extends StatelessWidget {
                             backgroundColor: Colors.white,
                             foregroundColor: primary,
                           ),
+                        );
+                      },
                         );
                       },
                     ),

@@ -1,13 +1,11 @@
 import '../../face_analysis/models/face_analysis_result.dart';
 
-/// Everything the Profile screen shows about the signed-in user.
+/// Represents the profile of the currently signed-in GlowAI user.
 ///
-/// Every field except [id] is optional, so a partly filled profile (or one
-/// where some data failed to load) still displays safely.
+/// The account information can come from Supabase Auth.
 ///
-/// A Supabase-backed `ProfileService` would build this from the current
-/// user's rows only (profile row, latest analysis row, counts), all keyed by
-/// `auth.uid()`.
+/// Other information, such as face analysis and saved looks,
+/// will be connected to the database separately.
 class UserProfile {
   const UserProfile({
     required this.id,
@@ -20,19 +18,27 @@ class UserProfile {
     this.isMock = false,
   });
 
+  /// Supabase Auth user ID.
   final String id;
+
+  /// Full name entered during registration.
   final String? name;
+
+  /// Email address of the authenticated user.
   final String? email;
+
+  /// Optional profile avatar URL.
   final String? avatarUrl;
 
-  /// The user's most recent saved analysis (the existing result model), or
-  /// null if they have not analysed their face yet.
+  /// Latest face analysis, if available.
   final FaceAnalysisResult? latestFaceAnalysis;
 
-  /// Null when the count is unavailable.
+  /// Number of saved looks, if available.
   final int? savedLooksCount;
+
+  /// Number of favorite products, if available.
   final int? favoriteProductsCount;
 
-  /// True for sample data. The UI labels such profiles as a demo.
+  /// Indicates whether this is sample/demo data.
   final bool isMock;
 }

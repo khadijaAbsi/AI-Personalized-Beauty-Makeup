@@ -103,10 +103,8 @@ class _DemoBadge extends StatelessWidget {
       ),
       child: Text(
         'Demo',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
       ),
     );
   }
