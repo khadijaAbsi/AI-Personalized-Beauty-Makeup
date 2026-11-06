@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
+import '../../../core/routing/main_shell_scope.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/secondary_button.dart';
 import '../models/face_analysis_progress.dart';
@@ -78,7 +79,9 @@ class _FaceAnalysisProcessingScreenState
   void _startAnalysis() {
     // Never run two analyses at once.
     if (_subscription != null) return;
-    _subscription = _service.analyze(widget.photo).listen(
+    _subscription = _service
+        .analyze(widget.photo)
+        .listen(
           _onProgress,
           onError: _onError,
           onDone: _onDone,
@@ -136,13 +139,26 @@ class _FaceAnalysisProcessingScreenState
     final result = _result;
     if (!mounted || _hasNavigated || result == null) return;
     _hasNavigated = true;
-    Navigator.of(context).pushReplacementNamed(
-      AppRouter.faceAnalysisResults,
-      arguments: FaceAnalysisResultsArguments(
-        result: result,
-        photo: widget.photo,
-      ),
+    final arguments = FaceAnalysisResultsArguments(
+      result: result,
+      photo: widget.photo,
     );
+
+    // Inside the app the results open in the Home flow, below the bottom bar,
+    // so the user can switch tabs without losing them.
+    final shell = MainShellController.active;
+    if (shell != null && shell.homeNavigator != null) {
+      shell.openInHomeFlow(
+        Navigator.of(context),
+        AppRouter.faceAnalysisResults,
+        arguments: arguments,
+      );
+      return;
+    }
+
+    Navigator.of(
+      context,
+    ).pushReplacementNamed(AppRouter.faceAnalysisResults, arguments: arguments);
   }
 
   @override
@@ -167,7 +183,9 @@ class _FaceAnalysisProcessingScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(child: AnalysisAvatar(progress: progress?.progress ?? 0)),
+                    Center(
+                      child: AnalysisAvatar(progress: progress?.progress ?? 0),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       'Analyzing your features',

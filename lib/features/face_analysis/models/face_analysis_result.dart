@@ -57,13 +57,13 @@ class FaceAnalysisResult {
   }
 
   Map<String, dynamic> toJson() => {
-        'face_shape': faceShape,
-        'skin_tone': skinTone,
-        'skin_undertone': skinUndertone,
-        'skin_depth': skinDepth,
-        'skin_tone_hex': skinToneHex,
-        'is_mock': isMock,
-      };
+    'face_shape': faceShape,
+    'skin_tone': skinTone,
+    'skin_undertone': skinUndertone,
+    'skin_depth': skinDepth,
+    'skin_tone_hex': skinToneHex,
+    'is_mock': isMock,
+  };
 
   static final RegExp _hexPattern = RegExp(r'^#?([0-9a-fA-F]{6})$');
 

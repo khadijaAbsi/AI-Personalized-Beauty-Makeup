@@ -6,7 +6,6 @@ import 'package:glowai/features/face_analysis/screens/face_analysis_guide_screen
 import 'package:glowai/features/face_analysis/widgets/skin_tone_swatch.dart';
 import 'package:glowai/features/profile/models/user_profile.dart';
 import 'package:glowai/features/profile/screens/profile_screen.dart';
-import 'package:glowai/features/profile/screens/settings_privacy_screen.dart';
 import 'package:glowai/features/profile/services/mock_user_profile.dart';
 import 'package:glowai/features/profile/services/profile_service.dart';
 
@@ -218,12 +217,12 @@ void main() {
       expect(find.text('Layla'), findsOneWidget);
       expect(find.text('layla@example.com (sample)'), findsOneWidget);
       expect(find.text('Demo'), findsOneWidget);
-      expect(find.text('Edit profile'), findsOneWidget);
+      expect(find.text('Edit profile'), findsNothing);
 
       // There is no skin preferences section on the profile.
       expect(find.text('Skin preferences'), findsNothing);
 
-      expect(find.text('Settings & Privacy'), findsOneWidget);
+      expect(find.text('Log Out'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -299,7 +298,7 @@ void main() {
 
       // Unavailable counts show a dash, not a made-up number.
       expect(find.text('\u2013'), findsNWidgets(2));
-      expect(find.text('Settings & Privacy'), findsOneWidget);
+      expect(find.text('Log Out'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -512,52 +511,23 @@ void main() {
       );
     });
 
-    testWidgets(
-      'Settings & Privacy opens the settings screen and Back returns',
-      (tester) async {
-        await _pumpLoaded(tester, mockUserProfile);
-
-        await _tapText(tester, 'Settings & Privacy');
-        await tester.pumpAndSettle();
-
-        expect(find.byType(SettingsPrivacyScreen), findsOneWidget);
-        expect(find.text('Account settings'), findsOneWidget);
-        expect(find.text('Privacy controls'), findsOneWidget);
-        expect(find.text('Log out'), findsOneWidget);
-        expect(find.text('Coming soon'), findsNWidgets(3));
-
-        await tester.tap(find.byTooltip('Back'));
-        await tester.pumpAndSettle();
-        expect(find.byType(SettingsPrivacyScreen), findsNothing);
-        expect(find.text('Layla'), findsOneWidget);
-      },
-    );
-
-    testWidgets('nothing on the settings screen pretends to work', (
-      tester,
-    ) async {
+    testWidgets('there is no Settings & Privacy entry', (tester) async {
       await _pumpLoaded(tester, mockUserProfile);
-      await _tapText(tester, 'Settings & Privacy');
-      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Log out'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.byType(SettingsPrivacyScreen), findsOneWidget);
-      expect(find.byType(SnackBar), findsNothing);
-      expect(find.byType(FilledButton), findsNothing);
-      expect(find.byType(OutlinedButton), findsNothing);
+      expect(find.text('Settings & Privacy'), findsNothing);
+      expect(find.text('Log Out'), findsOneWidget);
     });
 
-    testWidgets('Edit profile says it is coming soon', (tester) async {
+    testWidgets('there is no Edit profile action', (tester) async {
       await _pumpLoaded(tester, mockUserProfile);
 
-      await _tapText(tester, 'Edit profile');
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.text('Profile editing is coming soon.'), findsOneWidget);
+      expect(find.textContaining('Edit'), findsNothing);
+      // Real account details, the counts and logout stay.
+      expect(find.text('Layla'), findsOneWidget);
+      expect(find.text('layla@example.com (sample)'), findsOneWidget);
+      expect(find.text('Saved looks'), findsOneWidget);
+      expect(find.text('Favorite products'), findsOneWidget);
+      expect(find.text('Log Out'), findsOneWidget);
     });
 
     testWidgets('"Analyze my face" opens the Face Analysis Guide', (
@@ -670,7 +640,7 @@ void main() {
             expect(tester.takeException(), isNull);
 
             // The whole page can be scrolled to its last item.
-            await tester.ensureVisible(find.text('Settings & Privacy'));
+            await tester.ensureVisible(find.text('Log Out'));
             await tester.pump();
             expect(tester.takeException(), isNull);
           },

@@ -51,8 +51,9 @@ Finder get _loginButton => find.widgetWithText(FilledButton, 'Log In');
 
 void main() {
   group('validation', () {
-    testWidgets('empty form shows required errors and does not submit',
-        (tester) async {
+    testWidgets('empty form shows required errors and does not submit', (
+      tester,
+    ) async {
       final service = FakeAuthService();
       await _pumpLogin(tester, service);
 
@@ -76,22 +77,25 @@ void main() {
       expect(service.signInCalls, 0);
     });
 
-    testWidgets('a short password is accepted (length is not checked on login)',
-        (tester) async {
-      final service = FakeAuthService();
-      await _pumpLogin(tester, service);
+    testWidgets(
+      'a short password is accepted (length is not checked on login)',
+      (tester) async {
+        final service = FakeAuthService();
+        await _pumpLogin(tester, service);
 
-      await _enterCredentials(tester, password: 'abc');
-      await tester.tap(_loginButton);
-      await tester.pumpAndSettle();
+        await _enterCredentials(tester, password: 'abc');
+        await tester.tap(_loginButton);
+        await tester.pumpAndSettle();
 
-      expect(service.signInCalls, 1);
-    });
+        expect(service.signInCalls, 1);
+      },
+    );
   });
 
   group('submission', () {
-    testWidgets('shows loading, ignores repeat taps, then shows success',
-        (tester) async {
+    testWidgets('shows loading, ignores repeat taps, then shows success', (
+      tester,
+    ) async {
       final service = FakeAuthService();
       await _pumpLogin(tester, service);
 
@@ -123,8 +127,9 @@ void main() {
       expect(service.signInCalls, 1);
     });
 
-    testWidgets('failed login shows the error and re-enables the button',
-        (tester) async {
+    testWidgets('failed login shows the error and re-enables the button', (
+      tester,
+    ) async {
       final service = FakeAuthService(
         error: const AuthException('Incorrect email or password.'),
       );
@@ -141,8 +146,9 @@ void main() {
   });
 
   group('interactions', () {
-    testWidgets('Next on the email field moves focus to the password field',
-        (tester) async {
+    testWidgets('Next on the email field moves focus to the password field', (
+      tester,
+    ) async {
       await _pumpLogin(tester, FakeAuthService());
 
       await tester.tap(find.byType(TextFormField).at(0));
@@ -159,8 +165,9 @@ void main() {
       expect(passwordField.focusNode.hasFocus, isTrue);
     });
 
-    testWidgets('password is hidden by default and the eye icon toggles it',
-        (tester) async {
+    testWidgets('password is hidden by default and the eye icon toggles it', (
+      tester,
+    ) async {
       await _pumpLogin(tester, FakeAuthService());
 
       expect(find.byIcon(Icons.visibility_outlined), findsOneWidget);
@@ -171,20 +178,23 @@ void main() {
   });
 
   group('navigation', () {
-    testWidgets('Create Account -> Log In -> Sign up returns to Create Account',
-        (tester) async {
-      await _pumpApp(tester);
+    testWidgets(
+      'Create Account -> Log In -> Sign up returns to Create Account',
+      (tester) async {
+        await _pumpApp(tester);
 
-      await _tapText(tester, 'Log In');
-      expect(find.byType(LoginScreen), findsOneWidget);
+        await _tapText(tester, 'Log In');
+        expect(find.byType(LoginScreen), findsOneWidget);
 
-      await _tapText(tester, 'Sign up');
-      expect(find.byType(SignupScreen), findsOneWidget);
-      expect(find.byType(LoginScreen), findsNothing);
-    });
+        await _tapText(tester, 'Sign up');
+        expect(find.byType(SignupScreen), findsOneWidget);
+        expect(find.byType(LoginScreen), findsNothing);
+      },
+    );
 
-    testWidgets('back arrow on Login returns to Create Account',
-        (tester) async {
+    testWidgets('back arrow on Login returns to Create Account', (
+      tester,
+    ) async {
       await _pumpApp(tester);
 
       await _tapText(tester, 'Log In');

@@ -13,10 +13,7 @@ class FaceGuideOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return const ExcludeSemantics(
       child: IgnorePointer(
-        child: CustomPaint(
-          size: Size.infinite,
-          painter: _FaceGuidePainter(),
-        ),
+        child: CustomPaint(size: Size.infinite, painter: _FaceGuidePainter()),
       ),
     );
   }

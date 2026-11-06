@@ -53,8 +53,10 @@ class MockFaceAnalysisService implements FaceAnalysisService {
     final durations = [
       for (final stage in stages) stageDurations[stage] ?? Duration.zero,
     ];
-    final totalMicros =
-        durations.fold<int>(0, (sum, d) => sum + d.inMicroseconds);
+    final totalMicros = durations.fold<int>(
+      0,
+      (sum, d) => sum + d.inMicroseconds,
+    );
 
     late final StreamController<FaceAnalysisProgress> controller;
     Timer? timer;

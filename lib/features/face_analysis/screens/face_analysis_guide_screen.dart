@@ -49,7 +49,10 @@ class FaceAnalysisGuideScreen extends StatelessWidget {
                       child: CircleBackButton(),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    Text("Let's analyze your face", style: textTheme.headlineMedium),
+                    Text(
+                      "Let's analyze your face",
+                      style: textTheme.headlineMedium,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'A good photo gives the most accurate estimates.',
@@ -64,7 +67,8 @@ class FaceAnalysisGuideScreen extends StatelessWidget {
                     PrimaryButton(
                       label: 'Continue',
                       onPressed: () =>
-                          Navigator.of(context).pushNamed(AppRouter.addPortrait),
+                          Navigator.of(context)
+                              .pushNamed(AppRouter.addPortrait),
                     ),
                   ],
                 ),

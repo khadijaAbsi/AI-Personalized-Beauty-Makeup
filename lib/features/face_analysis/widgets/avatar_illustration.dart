@@ -12,10 +12,7 @@ class AvatarIllustration extends StatelessWidget {
   Widget build(BuildContext context) {
     return const ExcludeSemantics(
       child: ClipOval(
-        child: CustomPaint(
-          size: Size.infinite,
-          painter: _AvatarPainter(),
-        ),
+        child: CustomPaint(size: Size.infinite, painter: _AvatarPainter()),
       ),
     );
   }

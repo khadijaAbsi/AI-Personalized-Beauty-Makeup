@@ -20,10 +20,7 @@ class FakeAuthService implements AuthService {
   }
 
   @override
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     signInCalls++;
     await Future<void>.delayed(const Duration(milliseconds: 100));
     if (error != null) throw error!;

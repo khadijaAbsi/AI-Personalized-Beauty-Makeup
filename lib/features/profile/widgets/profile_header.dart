@@ -4,16 +4,13 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../models/user_profile.dart';
 
-/// Avatar (with a "Demo" badge for sample data), name, email and Edit profile.
+/// Avatar (with a "Demo" badge for sample data), name and email.
+///
+/// Account details come from the signed-in account and are not editable here.
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({
-    super.key,
-    required this.profile,
-    required this.onEditProfile,
-  });
+  const ProfileHeader({super.key, required this.profile});
 
   final UserProfile profile;
-  final VoidCallback onEditProfile;
 
   static const double _avatarSize = 96;
 
@@ -49,8 +46,6 @@ class ProfileHeader extends StatelessWidget {
             style: textTheme.titleMedium,
           ),
         ],
-        const SizedBox(height: AppSpacing.xs),
-        TextButton(onPressed: onEditProfile, child: const Text('Edit profile')),
       ],
     );
   }

@@ -32,22 +32,32 @@ void main() {
       expect(events.last.percent, 100);
       expect(events.last.result, isNotNull);
       expect(events.last.result!.isMock, isTrue);
-      expect(events.where((e) => !e.isComplete).every((e) => e.result == null),
-          isTrue);
+      expect(
+        events.where((e) => !e.isComplete).every((e) => e.result == null),
+        isTrue,
+      );
       expect(events.where((e) => e.isComplete), hasLength(1));
-      expect(events.where((e) => !e.isComplete).every((e) => e.progress < 1),
-          isTrue);
+      expect(
+        events.where((e) => !e.isComplete).every((e) => e.progress < 1),
+        isTrue,
+      );
 
       // Stages never go backwards, and all four appear.
       final indexes = events.map((e) => e.stage.index).toList();
       for (var i = 1; i < indexes.length; i++) {
         expect(indexes[i], greaterThanOrEqualTo(indexes[i - 1]));
       }
-      expect(events.map((e) => e.stage).toSet(), FaceAnalysisStage.values.toSet());
+      expect(
+        events.map((e) => e.stage).toSet(),
+        FaceAnalysisStage.values.toSet(),
+      );
 
       // Progress never goes backwards.
       for (var i = 1; i < events.length; i++) {
-        expect(events[i].progress, greaterThanOrEqualTo(events[i - 1].progress));
+        expect(
+          events[i].progress,
+          greaterThanOrEqualTo(events[i - 1].progress),
+        );
       }
     });
 
@@ -61,11 +71,13 @@ void main() {
   });
 
   group('default timing (fake clock, no real waiting)', () {
-    testWidgets('stages change at 1.5s, 3.5s and 5.5s; finishes at 7s',
-        (tester) async {
+    testWidgets('stages change at 1.5s, 3.5s and 5.5s; finishes at 7s', (
+      tester,
+    ) async {
       final events = <FaceAnalysisProgress>[];
-      final subscription =
-          MockFaceAnalysisService().analyze(testPhoto).listen(events.add);
+      final subscription = MockFaceAnalysisService()
+          .analyze(testPhoto)
+          .listen(events.add);
       // Cleanup that can never hang: start the cancel, don't await its future.
       addTearDown(() => unawaited(subscription.cancel()));
 
@@ -110,11 +122,13 @@ void main() {
     // the fake clock, and the next `await tester.pump()` then never finishes
     // (the test hangs). Use `tester.runAsync` to await real-zone futures.
 
-    testWidgets('cancelling stops all further events and timers',
-        (tester) async {
+    testWidgets('cancelling stops all further events and timers', (
+      tester,
+    ) async {
       final events = <FaceAnalysisProgress>[];
-      final subscription =
-          MockFaceAnalysisService().analyze(testPhoto).listen(events.add);
+      final subscription = MockFaceAnalysisService()
+          .analyze(testPhoto)
+          .listen(events.add);
 
       await tester.pump(const Duration(milliseconds: 500));
       expect(events, isNotEmpty);
@@ -134,11 +148,13 @@ void main() {
       // (A timer left running would make this test fail when it finishes.)
     });
 
-    testWidgets('cancellation takes effect immediately, without awaiting it',
-        (tester) async {
+    testWidgets('cancellation takes effect immediately, without awaiting it', (
+      tester,
+    ) async {
       final events = <FaceAnalysisProgress>[];
-      final subscription =
-          MockFaceAnalysisService().analyze(testPhoto).listen(events.add);
+      final subscription = MockFaceAnalysisService()
+          .analyze(testPhoto)
+          .listen(events.add);
       await tester.pump(const Duration(milliseconds: 200));
       final countBefore = events.length;
       expect(countBefore, greaterThan(0));
@@ -151,21 +167,25 @@ void main() {
       expect(events.length, countBefore);
     });
 
-    testWidgets('cancelling right after listening emits nothing and leaves no timer',
-        (tester) async {
-      final events = <FaceAnalysisProgress>[];
-      final subscription =
-          MockFaceAnalysisService().analyze(testPhoto).listen(events.add);
+    testWidgets(
+      'cancelling right after listening emits nothing and leaves no timer',
+      (tester) async {
+        final events = <FaceAnalysisProgress>[];
+        final subscription = MockFaceAnalysisService()
+            .analyze(testPhoto)
+            .listen(events.add);
 
-      await tester.runAsync(subscription.cancel);
-      await tester.pump(const Duration(seconds: 10));
+        await tester.runAsync(subscription.cancel);
+        await tester.pump(const Duration(seconds: 10));
 
-      expect(events.length, lessThanOrEqualTo(1));
-      expect(events.any((e) => e.isComplete), isFalse);
-    });
+        expect(events.length, lessThanOrEqualTo(1));
+        expect(events.any((e) => e.isComplete), isFalse);
+      },
+    );
 
-    testWidgets('a cancelled run can be restarted and runs cleanly',
-        (tester) async {
+    testWidgets('a cancelled run can be restarted and runs cleanly', (
+      tester,
+    ) async {
       final service = MockFaceAnalysisService();
 
       final first = <FaceAnalysisProgress>[];
@@ -189,11 +209,13 @@ void main() {
       expect(first.length, firstCount);
     });
 
-    testWidgets('cancelling after the run has finished is harmless',
-        (tester) async {
+    testWidgets('cancelling after the run has finished is harmless', (
+      tester,
+    ) async {
       final events = <FaceAnalysisProgress>[];
-      final subscription =
-          MockFaceAnalysisService().analyze(testPhoto).listen(events.add);
+      final subscription = MockFaceAnalysisService()
+          .analyze(testPhoto)
+          .listen(events.add);
       await tester.pump(const Duration(seconds: 8));
       expect(events.last.isComplete, isTrue);
 
@@ -205,30 +227,32 @@ void main() {
   });
 
   group('failures', () {
-    testWidgets('failFirstAttempts makes early runs fail mid-stage, then works',
-        (tester) async {
-      final service = MockFaceAnalysisService(failFirstAttempts: 1);
+    testWidgets(
+      'failFirstAttempts makes early runs fail mid-stage, then works',
+      (tester) async {
+        final service = MockFaceAnalysisService(failFirstAttempts: 1);
 
-      final events = <FaceAnalysisProgress>[];
-      final errors = <Object>[];
-      var done = false;
-      service
-          .analyze(testPhoto)
-          .listen(events.add, onError: errors.add, onDone: () => done = true);
-      await tester.pump(const Duration(seconds: 8));
+        final events = <FaceAnalysisProgress>[];
+        final errors = <Object>[];
+        var done = false;
+        service
+            .analyze(testPhoto)
+            .listen(events.add, onError: errors.add, onDone: () => done = true);
+        await tester.pump(const Duration(seconds: 8));
 
-      expect(errors, hasLength(1));
-      expect(errors.single, isA<FaceAnalysisException>());
-      expect(done, isTrue);
-      expect(events.last.stage, FaceAnalysisStage.estimatingSkinTone);
-      expect(events.any((e) => e.isComplete), isFalse);
+        expect(errors, hasLength(1));
+        expect(errors.single, isA<FaceAnalysisException>());
+        expect(done, isTrue);
+        expect(events.last.stage, FaceAnalysisStage.estimatingSkinTone);
+        expect(events.any((e) => e.isComplete), isFalse);
 
-      // Second attempt succeeds.
-      final retryEvents = <FaceAnalysisProgress>[];
-      service.analyze(testPhoto).listen(retryEvents.add);
-      await tester.pump(const Duration(seconds: 8));
-      expect(retryEvents.last.isComplete, isTrue);
-    });
+        // Second attempt succeeds.
+        final retryEvents = <FaceAnalysisProgress>[];
+        service.analyze(testPhoto).listen(retryEvents.add);
+        await tester.pump(const Duration(seconds: 8));
+        expect(retryEvents.last.isComplete, isTrue);
+      },
+    );
 
     testWidgets('the failing stage is configurable', (tester) async {
       final service = MockFaceAnalysisService(

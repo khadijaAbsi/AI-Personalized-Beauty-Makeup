@@ -15,7 +15,8 @@ abstract interface class GalleryPicker {
 /// Uses `image_picker`, which on Android opens the system Photo Picker, so no
 /// storage permission is needed. The image is not resized or compressed.
 class SystemGalleryPicker implements GalleryPicker {
-  SystemGalleryPicker({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
+  SystemGalleryPicker({ImagePicker? picker})
+    : _picker = picker ?? ImagePicker();
 
   final ImagePicker _picker;
 

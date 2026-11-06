@@ -28,7 +28,11 @@ class FacePositionGuide extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.blush, AppColors.accent, AppColors.accentDark],
+                  colors: [
+                    AppColors.blush,
+                    AppColors.accent,
+                    AppColors.accentDark,
+                  ],
                   stops: [0.0, 0.7, 1.0],
                 ),
               ),
@@ -67,10 +71,8 @@ class _DemoLabel extends StatelessWidget {
       ),
       child: Text(
         'Demo guide',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
-            ),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
       ),
     );
   }

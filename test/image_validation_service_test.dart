@@ -19,8 +19,10 @@ void main() {
   setUp(() => images = TestImages());
   tearDown(() => images.dispose());
 
-  Future<ImageValidationResult> validate(String path,
-      {PhotoSource source = PhotoSource.gallery}) {
+  Future<ImageValidationResult> validate(
+    String path, {
+    PhotoSource source = PhotoSource.gallery,
+  }) {
     return service.validate(path, source: source);
   }
 
@@ -35,15 +37,19 @@ void main() {
     });
 
     test('JPEG, and the photo source is preserved', () async {
-      final result =
-          await validate(images.jpg('a.jpg'), source: PhotoSource.camera);
+      final result = await validate(
+        images.jpg('a.jpg'),
+        source: PhotoSource.camera,
+      );
       expect(result.isValid, isTrue);
       expect(result.photo!.format, PhotoFormat.jpeg);
       expect(result.photo!.source, PhotoSource.camera);
     });
 
     test('exactly the minimum size (512 x 512)', () async {
-      final result = await validate(images.png('min.png', width: 512, height: 512));
+      final result = await validate(
+        images.png('min.png', width: 512, height: 512),
+      );
       expect(result.isValid, isTrue);
     });
 
@@ -53,11 +59,14 @@ void main() {
       expect(result.photo!.format, PhotoFormat.png);
     });
 
-    test('the original path is kept (file is never copied or modified)', () async {
-      final path = images.png('keep.png');
-      final result = await validate(path);
-      expect(result.photo!.path, path);
-    });
+    test(
+      'the original path is kept (file is never copied or modified)',
+      () async {
+        final path = images.png('keep.png');
+        final result = await validate(path);
+        expect(result.photo!.path, path);
+      },
+    );
   });
 
   group('HEIC / HEIF', () {
@@ -73,8 +82,10 @@ void main() {
       FakeHeicConverter converter,
       String path, {
       int maxFileSizeBytes = PhotoRules.maxFileSizeBytes,
-    }) => withConverter(converter, maxFileSizeBytes: maxFileSizeBytes)
-        .validate(path, source: PhotoSource.gallery);
+    }) => withConverter(
+      converter,
+      maxFileSizeBytes: maxFileSizeBytes,
+    ).validate(path, source: PhotoSource.gallery);
 
     test('the fixtures are real HEIC files, not renamed JPEGs', () {
       for (final bytes in [landscapeHeicBytes(), smallHeicBytes()]) {
@@ -83,28 +94,34 @@ void main() {
       }
     });
 
-    test('a real HEIC is converted: the result is a new, checked JPEG', () async {
-      final converter = FakeHeicConverter(width: 800, height: 600);
-      final source = images.heic('IMG_0001.HEIC');
-      final before = File(source).readAsBytesSync();
+    test(
+      'a real HEIC is converted: the result is a new, checked JPEG',
+      () async {
+        final converter = FakeHeicConverter(width: 800, height: 600);
+        final source = images.heic('IMG_0001.HEIC');
+        final before = File(source).readAsBytesSync();
 
-      final result = await run(converter, source);
+        final result = await run(converter, source);
 
-      expect(result.isValid, isTrue);
-      expect(converter.sources, [source]);
-      final photo = result.photo!;
-      expect(photo.convertedFromHeif, isTrue);
-      expect(photo.format, PhotoFormat.jpeg);
-      expect(photo.path, converter.outputs.single);
-      expect(photo.path, isNot(source));
-      expect(photo.width, 800);
-      expect(photo.height, 600);
-      expect(photo.sizeInBytes, File(photo.path).lengthSync());
-      expect(File(photo.path).readAsBytesSync().sublist(0, 3),
-          [0xFF, 0xD8, 0xFF]);
-      // The source copy is not modified by the service.
-      expect(File(source).readAsBytesSync(), before);
-    });
+        expect(result.isValid, isTrue);
+        expect(converter.sources, [source]);
+        final photo = result.photo!;
+        expect(photo.convertedFromHeif, isTrue);
+        expect(photo.format, PhotoFormat.jpeg);
+        expect(photo.path, converter.outputs.single);
+        expect(photo.path, isNot(source));
+        expect(photo.width, 800);
+        expect(photo.height, 600);
+        expect(photo.sizeInBytes, File(photo.path).lengthSync());
+        expect(File(photo.path).readAsBytesSync().sublist(0, 3), [
+          0xFF,
+          0xD8,
+          0xFF,
+        ]);
+        // The source copy is not modified by the service.
+        expect(File(source).readAsBytesSync(), before);
+      },
+    );
 
     test('portrait output keeps its aspect ratio', () async {
       final converter = FakeHeicConverter(width: 600, height: 900);
@@ -113,16 +130,24 @@ void main() {
       expect(result.photo!.height, 900);
     });
 
-    test('.heif, upper-case and misnamed files are all detected by content',
-        () async {
-      for (final name in ['a.heif', 'B.HEIF', 'c.HEIC', 'photo.jpg', 'noext']) {
-        final converter = FakeHeicConverter();
-        final result = await run(converter, images.heic(name));
-        expect(result.isValid, isTrue, reason: name);
-        expect(converter.sources, hasLength(1), reason: name);
-        expect(result.photo!.convertedFromHeif, isTrue, reason: name);
-      }
-    });
+    test(
+      '.heif, upper-case and misnamed files are all detected by content',
+      () async {
+        for (final name in [
+          'a.heif',
+          'B.HEIF',
+          'c.HEIC',
+          'photo.jpg',
+          'noext',
+        ]) {
+          final converter = FakeHeicConverter();
+          final result = await run(converter, images.heic(name));
+          expect(result.isValid, isTrue, reason: name);
+          expect(converter.sources, hasLength(1), reason: name);
+          expect(result.photo!.convertedFromHeif, isTrue, reason: name);
+        }
+      },
+    );
 
     test('brands: heic/heix/hevc and generic mif1/msf1 are HEIF', () async {
       for (final brands in <List<Object>>[
@@ -157,22 +182,24 @@ void main() {
       expect(converter.sources, isEmpty);
     });
 
-    test('a JPEG or PNG named .heic is validated as what it really is',
-        () async {
-      final converter = FakeHeicConverter();
-      final jpg = images.jpg('really_a_jpeg.heic');
-      final png = images.png('really_a_png.HEIF');
+    test(
+      'a JPEG or PNG named .heic is validated as what it really is',
+      () async {
+        final converter = FakeHeicConverter();
+        final jpg = images.jpg('really_a_jpeg.heic');
+        final png = images.png('really_a_png.HEIF');
 
-      final jpgResult = await run(converter, jpg);
-      final pngResult = await run(converter, png);
+        final jpgResult = await run(converter, jpg);
+        final pngResult = await run(converter, png);
 
-      expect(jpgResult.photo!.path, jpg);
-      expect(jpgResult.photo!.format, PhotoFormat.jpeg);
-      expect(jpgResult.photo!.convertedFromHeif, isFalse);
-      expect(pngResult.photo!.path, png);
-      expect(pngResult.photo!.format, PhotoFormat.png);
-      expect(converter.sources, isEmpty);
-    });
+        expect(jpgResult.photo!.path, jpg);
+        expect(jpgResult.photo!.format, PhotoFormat.jpeg);
+        expect(jpgResult.photo!.convertedFromHeif, isFalse);
+        expect(pngResult.photo!.path, png);
+        expect(pngResult.photo!.format, PhotoFormat.png);
+        expect(converter.sources, isEmpty);
+      },
+    );
 
     test('JPEG and PNG are never sent through the converter', () async {
       final converter = FakeHeicConverter();
@@ -181,17 +208,18 @@ void main() {
       expect(converter.sources, isEmpty);
     });
 
-    test('rules run on the converted image: exactly 512 x 512 passes',
-        () async {
-      final result = await run(
-        FakeHeicConverter(width: 512, height: 512),
-        images.heic('min.heic'),
-      );
-      expect(result.isValid, isTrue);
-    });
+    test(
+      'rules run on the converted image: exactly 512 x 512 passes',
+      () async {
+        final result = await run(
+          FakeHeicConverter(width: 512, height: 512),
+          images.heic('min.heic'),
+        );
+        expect(result.isValid, isTrue);
+      },
+    );
 
-    test('too small after conversion; the converted file is removed',
-        () async {
+    test('too small after conversion; the converted file is removed', () async {
       final converter = FakeHeicConverter(width: 300, height: 300);
       final result = await run(converter, images.heic('small.heic'));
 
@@ -229,16 +257,18 @@ void main() {
       expect(result.error, ImageValidationError.conversionFailed);
     });
 
-    test('converter output that is not decodable counts as a failure',
-        () async {
-      final converter = FakeHeicConverter(
-        outputBytes: [0xFF, 0xD8, 0xFF, 0xE0, ...List.filled(300, 7)],
-      );
-      final result = await run(converter, images.heic('garbage_out.heic'));
-      expect(result.error, ImageValidationError.conversionFailed);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(File(converter.outputs.single).existsSync(), isFalse);
-    });
+    test(
+      'converter output that is not decodable counts as a failure',
+      () async {
+        final converter = FakeHeicConverter(
+          outputBytes: [0xFF, 0xD8, 0xFF, 0xE0, ...List.filled(300, 7)],
+        );
+        final result = await run(converter, images.heic('garbage_out.heic'));
+        expect(result.error, ImageValidationError.conversionFailed);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(File(converter.outputs.single).existsSync(), isFalse);
+      },
+    );
 
     test('converter output that is not a JPEG is not trusted', () async {
       // A valid PNG: it decodes, but "converted to JPEG" must really be one.
@@ -296,8 +326,10 @@ void main() {
 
     test('too large (limit is configurable)', () async {
       const smallLimit = ImageValidationService(maxFileSizeBytes: 100);
-      final result =
-          await smallLimit.validate(images.png('big.png'), source: PhotoSource.gallery);
+      final result = await smallLimit.validate(
+        images.png('big.png'),
+        source: PhotoSource.gallery,
+      );
       expect(result.error, ImageValidationError.tooLarge);
       expect(result.error!.message, contains('too large'));
       expect(result.error!.message, contains('${PhotoRules.maxFileSizeMb} MB'));
@@ -308,11 +340,15 @@ void main() {
     });
 
     test('too small: below 512 px in either direction', () async {
-      final small = await validate(images.png('small.png', width: 300, height: 300));
+      final small = await validate(
+        images.png('small.png', width: 300, height: 300),
+      );
       expect(small.error, ImageValidationError.tooSmall);
       expect(small.error!.message, contains('too small'));
 
-      final narrow = await validate(images.jpg('narrow.jpg', width: 511, height: 800));
+      final narrow = await validate(
+        images.jpg('narrow.jpg', width: 511, height: 800),
+      );
       expect(narrow.error, ImageValidationError.tooSmall);
     });
 
@@ -346,7 +382,9 @@ void main() {
         height: 600,
         sizeInBytes: 1,
       );
-      final result = await const NotIntegratedFaceValidationService().validate(photo);
+      final result = await const NotIntegratedFaceValidationService().validate(
+        photo,
+      );
       expect(result.status, FaceCheckStatus.notPerformed);
       expect(result.blocksContinue, isFalse);
     });
@@ -354,7 +392,8 @@ void main() {
     test('only a real failure blocks', () {
       expect(const FaceValidationResult.passed().blocksContinue, isFalse);
       expect(
-        const FaceValidationResult.failed([FaceIssue.multipleFaces]).blocksContinue,
+        const FaceValidationResult.failed([FaceIssue.multipleFaces])
+            .blocksContinue,
         isTrue,
       );
     });

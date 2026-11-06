@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:glowai/features/history/services/mock_saved_looks_service.dart';
 
@@ -49,9 +48,7 @@ class MakeupLookDetailsPage extends StatelessWidget {
         behavior: SnackBarBehavior.floating,
         backgroundColor: primary,
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -220,8 +217,10 @@ class MakeupLookDetailsPage extends StatelessWidget {
                 child: ValueListenableBuilder<int>(
                   valueListenable: MockSavedLooksService.changes,
                   builder: (context, version, child) {
-                    final isSaved =
-                        MockSavedLooksService.isSaved(name, occasion);
+                    final isSaved = MockSavedLooksService.isSaved(
+                      name,
+                      occasion,
+                    );
 
                     return OutlinedButton.icon(
                       onPressed: () => _toggleSaveLook(context),
@@ -230,14 +229,10 @@ class MakeupLookDetailsPage extends StatelessWidget {
                             ? Icons.bookmark_rounded
                             : Icons.bookmark_border_rounded,
                       ),
-                      label: Text(
-                        isSaved ? 'Saved' : 'Save This Look',
-                      ),
+                      label: Text(isSaved ? 'Saved' : 'Save This Look'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: isSaved ? accent : primary,
-                        side: BorderSide(
-                          color: isSaved ? accent : primary,
-                        ),
+                        side: BorderSide(color: isSaved ? accent : primary),
                         backgroundColor: isSaved
                             ? accent.withValues(alpha: 0.08)
                             : Colors.transparent,
@@ -303,10 +298,7 @@ class MakeupLookDetailsPage extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.black45,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.black45, fontSize: 12),
           ),
           const SizedBox(height: 4),
           Text(

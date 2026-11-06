@@ -52,25 +52,27 @@ void main() {
       expect(result.skinToneArgb, isNull);
     });
 
-    test('wrong types, blanks and bad colors become null instead of throwing',
-        () {
-      final result = FaceAnalysisResult.fromJson({
-        'face_shape': 42,
-        'skin_tone': '   ',
-        'skin_undertone': null,
-        'skin_depth': ['Medium'],
-        'skin_tone_hex': 'not-a-color',
-        'is_mock': 'yes',
-        'unexpected_extra_key': true,
-      });
-      expect(result.faceShape, isNull);
-      expect(result.skinTone, isNull);
-      expect(result.skinUndertone, isNull);
-      expect(result.skinDepth, isNull);
-      expect(result.skinToneHex, isNull);
-      expect(result.skinToneArgb, isNull);
-      expect(result.isMock, isFalse);
-    });
+    test(
+      'wrong types, blanks and bad colors become null instead of throwing',
+      () {
+        final result = FaceAnalysisResult.fromJson({
+          'face_shape': 42,
+          'skin_tone': '   ',
+          'skin_undertone': null,
+          'skin_depth': ['Medium'],
+          'skin_tone_hex': 'not-a-color',
+          'is_mock': 'yes',
+          'unexpected_extra_key': true,
+        });
+        expect(result.faceShape, isNull);
+        expect(result.skinTone, isNull);
+        expect(result.skinUndertone, isNull);
+        expect(result.skinDepth, isNull);
+        expect(result.skinToneHex, isNull);
+        expect(result.skinToneArgb, isNull);
+        expect(result.isMock, isFalse);
+      },
+    );
 
     test('accepts a color without the leading #', () {
       expect(

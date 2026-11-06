@@ -21,8 +21,9 @@ import '../test/helpers/face_test_helpers.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('portrait -> processing -> results -> occasion -> back',
-      (tester) async {
+  testWidgets('portrait -> processing -> results -> occasion -> back', (
+    tester,
+  ) async {
     final images = TestImages();
     addTearDown(images.dispose);
     final photoPath = images.png('portrait.png', width: 800, height: 1000);
@@ -33,8 +34,9 @@ void main() {
         onGenerateRoute: AppRouter.onGenerateRoute,
         home: AddPortraitScreen(
           galleryPicker: FakeGalleryPicker([photoPath]),
-          cameraPermissionService:
-              FakeCameraPermissionService(CameraPermissionStatus.granted),
+          cameraPermissionService: FakeCameraPermissionService(
+            CameraPermissionStatus.granted,
+          ),
           cameraService: FakeCameraService(capturePath: photoPath),
         ),
       ),

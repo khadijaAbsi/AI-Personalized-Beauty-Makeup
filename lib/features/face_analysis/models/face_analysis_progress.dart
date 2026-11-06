@@ -23,11 +23,11 @@ class FaceAnalysisProgress {
     required this.progress,
     required this.status,
     this.result,
-  })  : assert(progress >= 0 && progress <= 1, 'progress must be 0.0 to 1.0'),
-        assert(
-          status != FaceAnalysisStatus.completed || result != null,
-          'a completed update must carry the result',
-        );
+  }) : assert(progress >= 0 && progress <= 1, 'progress must be 0.0 to 1.0'),
+       assert(
+         status != FaceAnalysisStatus.completed || result != null,
+         'a completed update must carry the result',
+       );
 
   /// The stage currently being worked on. Earlier stages are finished.
   final FaceAnalysisStage stage;

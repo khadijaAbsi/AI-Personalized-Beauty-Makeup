@@ -39,7 +39,8 @@ Future<void> _pump(
       ),
       home: AddPortraitScreen(
         galleryPicker: gallery ?? FakeGalleryPicker(const []),
-        cameraPermissionService: permission ??
+        cameraPermissionService:
+            permission ??
             FakeCameraPermissionService(CameraPermissionStatus.granted),
         cameraService:
             camera ?? FakeCameraService(capturePath: images.png('capture.png')),
@@ -93,8 +94,9 @@ void main() {
   tearDown(() => images.dispose());
 
   group('rendering', () {
-    testWidgets('shows the upload area and both buttons, no Continue',
-        (tester) async {
+    testWidgets('shows the upload area and both buttons, no Continue', (
+      tester,
+    ) async {
       await _pump(tester);
 
       expect(find.text('Add your portrait'), findsOneWidget);
@@ -133,8 +135,9 @@ void main() {
       expect(gallery.calls, 1);
     });
 
-    testWidgets('cancelling shows no error and changes nothing',
-        (tester) async {
+    testWidgets('cancelling shows no error and changes nothing', (
+      tester,
+    ) async {
       await _pump(tester, gallery: FakeGalleryPicker([null]));
 
       await _tap(tester, _gallery);
@@ -145,13 +148,23 @@ void main() {
       expect(_continue, findsNothing);
       expect(find.text('Upload a front-facing photo'), findsOneWidget);
       // Buttons are usable again.
-      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Take a Photo')).onPressed, isNotNull);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Take a Photo'),
+            )
+            .onPressed,
+        isNotNull,
+      );
     });
 
     testWidgets('picker failure shows a friendly message', (tester) async {
       await _pump(
         tester,
-        gallery: FakeGalleryPicker(const [], error: const GalleryAccessException()),
+        gallery: FakeGalleryPicker(
+          const [],
+          error: const GalleryAccessException(),
+        ),
       );
 
       await _tap(tester, _gallery);
@@ -165,8 +178,7 @@ void main() {
   group('valid photos', () {
     for (final name in ['selfie.jpg', 'selfie.png']) {
       testWidgets('$name is accepted and previewed', (tester) async {
-        final path =
-            name.endsWith('jpg') ? images.jpg(name) : images.png(name);
+        final path = name.endsWith('jpg') ? images.jpg(name) : images.png(name);
         await _pump(tester, gallery: FakeGalleryPicker([path]));
 
         await _chooseValidPhoto(tester);
@@ -188,7 +200,11 @@ void main() {
       String message, {
       ImageValidationService validator = const ImageValidationService(),
     }) async {
-      await _pump(tester, gallery: FakeGalleryPicker([path]), validator: validator);
+      await _pump(
+        tester,
+        gallery: FakeGalleryPicker([path]),
+        validator: validator,
+      );
 
       await _tap(tester, _gallery);
       await tester.pump();
@@ -245,12 +261,10 @@ void main() {
   });
 
   group('Continue button', () {
-    testWidgets('appears only after the file has really been validated',
-        (tester) async {
-      await _pump(
-        tester,
-        gallery: FakeGalleryPicker([images.png('ok.png')]),
-      );
+    testWidgets('appears only after the file has really been validated', (
+      tester,
+    ) async {
+      await _pump(tester, gallery: FakeGalleryPicker([images.png('ok.png')]));
       expect(_continue, findsNothing);
 
       await _tap(tester, _gallery);
@@ -261,7 +275,11 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(_continue, findsNothing);
       expect(
-        tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Take a Photo')).onPressed,
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Take a Photo'),
+            )
+            .onPressed,
         isNull,
       );
 
@@ -287,8 +305,9 @@ void main() {
       expect(tester.widget<FilledButton>(_continueButton).onPressed, isNull);
     });
 
-    testWidgets('face checks that were not performed never block',
-        (tester) async {
+    testWidgets('face checks that were not performed never block', (
+      tester,
+    ) async {
       final face = FakeFaceValidationService(
         const FaceValidationResult.notPerformed(),
       );
@@ -304,11 +323,14 @@ void main() {
       expect(tester.widget<FilledButton>(_continueButton).onPressed, isNotNull);
     });
 
-    testWidgets('navigates to Face Analysis Processing with the photo',
-        (tester) async {
+    testWidgets('navigates to Face Analysis Processing with the photo', (
+      tester,
+    ) async {
       await _pump(
         tester,
-        gallery: FakeGalleryPicker([images.png('ok.png', width: 640, height: 800)]),
+        gallery: FakeGalleryPicker([
+          images.png('ok.png', width: 640, height: 800),
+        ]),
       );
       await _chooseValidPhoto(tester);
 
@@ -351,8 +373,9 @@ void main() {
       expect(_continue, findsOneWidget);
     });
 
-    testWidgets('a bad replacement keeps the previous valid photo',
-        (tester) async {
+    testWidgets('a bad replacement keeps the previous valid photo', (
+      tester,
+    ) async {
       final good = images.png('good.png');
       final gallery = FakeGalleryPicker([good, images.notAnImage('bad.jpg')]);
       await _pump(tester, gallery: gallery);
@@ -370,12 +393,14 @@ void main() {
       expect(tester.widget<FilledButton>(_continueButton).onPressed, isNotNull);
     });
 
-    testWidgets('"Retake photo" opens the camera and replaces the photo',
-        (tester) async {
+    testWidgets('"Retake photo" opens the camera and replaces the photo', (
+      tester,
+    ) async {
       final fromGallery = images.png('gallery.png');
       final fromCamera = images.jpg('camera.jpg');
-      final permission =
-          FakeCameraPermissionService(CameraPermissionStatus.granted);
+      final permission = FakeCameraPermissionService(
+        CameraPermissionStatus.granted,
+      );
       final camera = FakeCameraService(capturePath: fromCamera);
       await _pump(
         tester,
@@ -407,10 +432,12 @@ void main() {
   });
 
   group('camera', () {
-    testWidgets('opens the camera with the oval overlay and captures a photo',
-        (tester) async {
-      final permission =
-          FakeCameraPermissionService(CameraPermissionStatus.granted);
+    testWidgets('opens the camera with the oval overlay and captures a photo', (
+      tester,
+    ) async {
+      final permission = FakeCameraPermissionService(
+        CameraPermissionStatus.granted,
+      );
       final camera = FakeCameraService(capturePath: images.png('shot.png'));
       await _pump(tester, permission: permission, camera: camera);
 
@@ -438,8 +465,9 @@ void main() {
       expect(find.byKey(const Key('fake-camera-preview')), findsOneWidget);
     });
 
-    testWidgets('a captured photo is validated, previewed and can continue',
-        (tester) async {
+    testWidgets('a captured photo is validated, previewed and can continue', (
+      tester,
+    ) async {
       final shot = images.jpg('shot.jpg');
       await _pump(tester, camera: FakeCameraService(capturePath: shot));
 
@@ -456,8 +484,9 @@ void main() {
       expect(find.byType(PortraitMessageCard), findsNothing);
     });
 
-    testWidgets('leaving the camera without a photo is not an error',
-        (tester) async {
+    testWidgets('leaving the camera without a photo is not an error', (
+      tester,
+    ) async {
       await _pump(tester);
 
       await _tap(tester, _takePhoto);
@@ -470,10 +499,12 @@ void main() {
       expect(_continue, findsNothing);
     });
 
-    testWidgets('permission denied: explains and can try again',
-        (tester) async {
-      final permission =
-          FakeCameraPermissionService(CameraPermissionStatus.denied);
+    testWidgets('permission denied: explains and can try again', (
+      tester,
+    ) async {
+      final permission = FakeCameraPermissionService(
+        CameraPermissionStatus.denied,
+      );
       final camera = FakeCameraService(capturePath: images.png('shot.png'));
       await _pump(tester, permission: permission, camera: camera);
 
@@ -495,10 +526,12 @@ void main() {
       expect(find.byKey(const Key('fake-camera-preview')), findsOneWidget);
     });
 
-    testWidgets('permission permanently denied: offers Open Settings',
-        (tester) async {
-      final permission =
-          FakeCameraPermissionService(CameraPermissionStatus.permanentlyDenied);
+    testWidgets('permission permanently denied: offers Open Settings', (
+      tester,
+    ) async {
+      final permission = FakeCameraPermissionService(
+        CameraPermissionStatus.permanentlyDenied,
+      );
       final camera = FakeCameraService(capturePath: images.png('shot.png'));
       await _pump(tester, permission: permission, camera: camera);
 
@@ -514,8 +547,9 @@ void main() {
       expect(permission.settingsOpened, 1);
     });
 
-    testWidgets('camera unavailable: friendly message and a way back',
-        (tester) async {
+    testWidgets('camera unavailable: friendly message and a way back', (
+      tester,
+    ) async {
       await _pump(
         tester,
         camera: FakeCameraService(error: const CameraUnavailableException()),
@@ -533,17 +567,23 @@ void main() {
       expect(_gallery, findsOneWidget);
     });
 
-    testWidgets('camera permission revoked while opening is handled',
-        (tester) async {
+    testWidgets('camera permission revoked while opening is handled', (
+      tester,
+    ) async {
       await _pump(
         tester,
-        camera: FakeCameraService(error: const CameraPermissionDeniedException()),
+        camera: FakeCameraService(
+          error: const CameraPermissionDeniedException(),
+        ),
       );
 
       await _tap(tester, _takePhoto);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Camera access is turned off'), findsOneWidget);
+      expect(
+        find.textContaining('Camera access is turned off'),
+        findsOneWidget,
+      );
     });
   });
 

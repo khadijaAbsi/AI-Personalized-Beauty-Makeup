@@ -10,14 +10,12 @@ import 'package:glowai/features/face_analysis/widgets/face_shape_illustration.da
 import 'package:glowai/features/face_analysis/widgets/portrait_message_card.dart';
 import 'package:glowai/features/face_analysis/widgets/skin_tone_swatch.dart';
 import 'package:glowai/features/home/screens/occasion_selection_page.dart';
+
 import 'helpers/analysis_test_helpers.dart';
 
 Object? _occasionArguments;
 
-Widget _app({
-  required Widget home,
-  double textScale = 1.0,
-}) {
+Widget _app({required Widget home, double textScale = 1.0}) {
   return MaterialApp(
     onGenerateRoute: (settings) {
       if (settings.name == AppRouter.chooseOccasion) {
@@ -68,8 +66,9 @@ Color _swatchColor(WidgetTester tester) {
 
 void main() {
   group('with the sample result', () {
-    testWidgets('shows every value, the sample label and the disclaimer',
-        (tester) async {
+    testWidgets('shows every value, the sample label and the disclaimer', (
+      tester,
+    ) async {
       await _pump(tester);
 
       expect(find.text('Your results'), findsOneWidget);
@@ -96,8 +95,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('face shape card shows the value and its illustration',
-        (tester) async {
+    testWidgets('face shape card shows the value and its illustration', (
+      tester,
+    ) async {
       await _pump(tester);
 
       final card = find.ancestor(
@@ -106,30 +106,28 @@ void main() {
       );
       expect(card, findsWidgets);
       expect(
-        find.descendant(
-          of: card.first,
-          matching: find.text('Oval'),
-        ),
+        find.descendant(of: card.first, matching: find.text('Oval')),
         findsOneWidget,
       );
       expect(find.byType(FaceShapeIllustration), findsOneWidget);
       expect(
-        tester.widget<FaceShapeIllustration>(find.byType(FaceShapeIllustration))
+        tester
+            .widget<FaceShapeIllustration>(find.byType(FaceShapeIllustration))
             .faceShape,
         'Oval',
       );
     });
 
-    testWidgets('skin tone card shows the value and the #D8A17E swatch',
-        (tester) async {
+    testWidgets('skin tone card shows the value and the #D8A17E swatch', (
+      tester,
+    ) async {
       await _pump(tester);
 
       expect(find.byType(SkinToneSwatch), findsOneWidget);
       expect(_swatchColor(tester), const Color(0xFFD8A17E));
     });
 
-    testWidgets('the sample label is only shown for mock data',
-        (tester) async {
+    testWidgets('the sample label is only shown for mock data', (tester) async {
       await _pump(
         tester,
         result: const FaceAnalysisResult(
@@ -175,8 +173,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('an invalid color shows no swatch but keeps the name',
-        (tester) async {
+    testWidgets('an invalid color shows no swatch but keeps the name', (
+      tester,
+    ) async {
       await _pump(
         tester,
         result: const FaceAnalysisResult(
@@ -201,8 +200,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('no result at all shows a friendly message and no Continue',
-        (tester) async {
+    testWidgets('no result at all shows a friendly message and no Continue', (
+      tester,
+    ) async {
       await _pump(tester, result: null);
 
       expect(find.byType(PortraitMessageCard), findsOneWidget);
@@ -215,20 +215,20 @@ void main() {
 
   group('navigation', () {
     Widget homeThatOpensResults() => Builder(
-          builder: (context) => Scaffold(
-            body: TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => FaceAnalysisResultsScreen(
-                    result: mockFaceAnalysisResult,
-                    photo: testPhoto,
-                  ),
-                ),
+      builder: (context) => Scaffold(
+        body: TextButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => FaceAnalysisResultsScreen(
+                result: mockFaceAnalysisResult,
+                photo: testPhoto,
               ),
-              child: const Text('Open results'),
             ),
           ),
-        );
+          child: const Text('Open results'),
+        ),
+      ),
+    );
 
     testWidgets('Back returns to the previous screen', (tester) async {
       tester.view.devicePixelRatio = 3.0;
@@ -247,8 +247,9 @@ void main() {
       expect(find.text('Open results'), findsOneWidget);
     });
 
-    testWidgets('Back is safe when Results is the first screen',
-        (tester) async {
+    testWidgets('Back is safe when Results is the first screen', (
+      tester,
+    ) async {
       await _pump(tester);
 
       await tester.tap(find.byTooltip('Back'));
@@ -258,8 +259,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('Continue opens the real Occasion Selection page',
-        (tester) async {
+    testWidgets('Continue opens the real Occasion Selection page', (
+      tester,
+    ) async {
       await _pump(tester);
 
       await _tapContinue(tester);
@@ -269,8 +271,9 @@ void main() {
       expect(find.byType(OccasionSelectionPage), findsOneWidget);
     });
 
-    testWidgets('the result and portrait are passed on to the next step',
-        (tester) async {
+    testWidgets('the result and portrait are passed on to the next step', (
+      tester,
+    ) async {
       await _pump(tester);
 
       await _tapContinue(tester);
@@ -282,8 +285,7 @@ void main() {
       expect(arguments.photo, same(testPhoto));
     });
 
-    testWidgets('Back from the placeholder returns to Results',
-        (tester) async {
+    testWidgets('Back from the placeholder returns to Results', (tester) async {
       await _pump(tester);
       await _tapContinue(tester);
       await tester.pumpAndSettle();
@@ -296,8 +298,9 @@ void main() {
       expect(find.text('Oval'), findsOneWidget);
     });
 
-    testWidgets('tapping Continue twice quickly opens one screen',
-        (tester) async {
+    testWidgets('tapping Continue twice quickly opens one screen', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.ensureVisible(_continue);
       await tester.pump();
@@ -327,8 +330,9 @@ void main() {
       expect(find.byType(OccasionSelectionPage), findsOneWidget);
     });
 
-    testWidgets('rebuilding Results keeps it showing the same result',
-        (tester) async {
+    testWidgets('rebuilding Results keeps it showing the same result', (
+      tester,
+    ) async {
       await _pump(tester);
       await tester.pumpWidget(
         _app(
@@ -365,8 +369,9 @@ void main() {
       }
     }
 
-    testWidgets('the missing-data layouts also fit small screens',
-        (tester) async {
+    testWidgets('the missing-data layouts also fit small screens', (
+      tester,
+    ) async {
       await _pump(
         tester,
         result: const FaceAnalysisResult(),
