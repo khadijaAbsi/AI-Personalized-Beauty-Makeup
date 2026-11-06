@@ -56,7 +56,8 @@ class _AddPortraitScreenState extends State<AddPortraitScreen> {
   late final ImageValidationService _imageValidator =
       widget.imageValidationService ?? const ImageValidationService();
   late final FaceValidationService _faceValidator =
-      widget.faceValidationService ?? const NotIntegratedFaceValidationService();
+      widget.faceValidationService ??
+      const NotIntegratedFaceValidationService();
 
   /// The current accepted photo. Only replaced when a new one passes
   /// validation, so a bad pick never loses a good photo.
@@ -187,10 +188,8 @@ class _AddPortraitScreenState extends State<AddPortraitScreen> {
   void _continue() {
     final photo = _photo;
     if (photo == null) return;
-    Navigator.of(context).pushNamed(
-      AppRouter.faceAnalysisProcessing,
-      arguments: photo,
-    );
+    Navigator.of(context)
+        .pushNamed(AppRouter.faceAnalysisProcessing, arguments: photo);
   }
 
   @override
@@ -227,7 +226,10 @@ class _AddPortraitScreenState extends State<AddPortraitScreen> {
                         aspectRatio: 1.2,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: WebSafePhoto(path: _photo!.path, fit: BoxFit.contain),
+                          child: WebSafePhoto(
+                            path: _photo!.path,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       )
                     : PhotoUploadArea(
@@ -257,7 +259,8 @@ class _AddPortraitScreenState extends State<AddPortraitScreen> {
       case _CameraNotice.denied:
         widgets.add(
           PortraitMessageCard(
-            message: 'Camera access is needed to take a photo. You can allow '
+            message:
+                'Camera access is needed to take a photo. You can allow '
                 'it when asked, or choose a photo from your gallery instead.',
             actionLabel: 'Try again',
             onAction: _isBusy ? null : _takePhoto,
@@ -266,7 +269,8 @@ class _AddPortraitScreenState extends State<AddPortraitScreen> {
       case _CameraNotice.permanentlyDenied:
         widgets.add(
           PortraitMessageCard(
-            message: 'Camera access is turned off for GlowAI. Turn it on in '
+            message:
+                'Camera access is turned off for GlowAI. Turn it on in '
                 'Settings to take a photo, or choose one from your gallery.',
             actionLabel: 'Open Settings',
             onAction: _permissionService.openSettings,
@@ -277,16 +281,19 @@ class _AddPortraitScreenState extends State<AddPortraitScreen> {
     }
 
     if (_photo != null && _faceResult.status == FaceCheckStatus.failed) {
-      final issues = _faceResult.issues.map((i) => '\u2022 ${i.message}').join('\n');
+      final issues = _faceResult.issues
+          .map((i) => '\u2022 ${i.message}')
+          .join('\n');
       widgets.add(
-        PortraitMessageCard(
-          message: "We couldn't use this photo:\n$issues",
-        ),
+        PortraitMessageCard(message: "We couldn't use this photo:\n$issues"),
       );
     }
 
     return [
-      for (final card in widgets) ...[card, const SizedBox(height: AppSpacing.md)],
+      for (final card in widgets) ...[
+        card,
+        const SizedBox(height: AppSpacing.md),
+      ],
     ];
   }
 

@@ -8,8 +8,7 @@ class PrivacyInfoCard extends StatelessWidget {
   const PrivacyInfoCard({
     super.key,
     this.title = 'Your privacy',
-    this.message =
-        'Your photo is used only for this analysis. You can delete it anytime in Settings and Privacy.',
+    this.message = 'Your photo is used only for this analysis. You can delete it anytime in Settings and Privacy.',
   });
 
   final String title;

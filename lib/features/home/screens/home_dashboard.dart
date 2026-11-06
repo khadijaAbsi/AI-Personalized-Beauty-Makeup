@@ -32,67 +32,21 @@ class HomeDashboard extends StatelessWidget {
       );
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(wasSaved
-            ? '$title removed from Saved Looks'
-            : '$title saved to Saved Looks')),
+        SnackBar(
+          content: Text(
+            wasSaved
+                ? '$title removed from Saved Looks'
+                : '$title saved to Saved Looks',
+          ),
+        ),
       );
     } catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not update Saved Looks. Please try again.')),
+        const SnackBar(
+          content: Text('Could not update Saved Looks. Please try again.'),
+        ),
       );
-    }
-  }
-
-  // void _handleNavigation(BuildContext context, int index) {
-  //   if (index == 0) return;
-
-  //   if (index == 3) {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (_) => const SavedLooksScreen()),
-  //     );
-  //     return;
-  //   }
-
-  //   if (index == 4) {
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (_) => const FavoriteProductsPage()),
-  //     );
-  //     return;
-  //   }
-
-  //   final pages = {1: 'Discover', 2: 'Try-On', 5: 'Profile'};
-
-  //   _showComingSoon(context, pages[index] ?? 'This section');
-  // }
-
-  void _handleNavigation(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        // Already on Home Dashboard.
-        return;
-
-      case 1:
-        Navigator.pushNamed(context, AppRouter.chooseOccasion);
-        break;
-
-      case 2:
-        Navigator.pushNamed(context, AppRouter.faceAnalysisGuide);
-        break;
-
-      case 3:
-        Navigator.pushReplacementNamed(context, AppRouter.savedLooks);
-        break;
-
-      case 4:
-        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
-        break;
-
-      case 5:
-        Navigator.pushNamed(context, AppRouter.profile);
-        break;
     }
   }
 
@@ -100,8 +54,8 @@ class HomeDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     String displayName = 'GlowAI User';
     try {
-      final name = Supabase.instance.client.auth.currentUser
-          ?.userMetadata?['full_name'];
+      final name =
+          Supabase.instance.client.auth.currentUser?.userMetadata?['full_name'];
       if (name is String && name.trim().isNotEmpty) {
         displayName = name.trim().split(RegExp(r'\s+')).first;
       }
@@ -230,10 +184,12 @@ class HomeDashboard extends StatelessWidget {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                              Navigator.pushNamed(
+                              // Photo capture and AI processing are full
+                              // screen: open them above the bottom bar.
+                              Navigator.of(
                                 context,
-                                AppRouter.faceAnalysisGuide,
-                              );
+                                rootNavigator: true,
+                              ).pushNamed(AppRouter.faceAnalysisGuide);
                             },
                             icon: const Icon(Icons.auto_awesome),
                             label: const Text('Analyze My Face'),
@@ -255,6 +211,11 @@ class HomeDashboard extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 16),
+
+                  // How GlowAI works
+                  _howItWorksCard(context),
 
                   const SizedBox(height: 30),
 
@@ -334,50 +295,63 @@ class HomeDashboard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
 
-      // Bottom navigation
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) => _handleNavigation(context, index),
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primary,
-        unselectedItemColor: const Color(0xFF9A9090),
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+  Widget _howItWorksCard(BuildContext context) {
+    return Material(
+      key: const ValueKey('how-it-works-card'),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.pushNamed(context, AppRouter.howItWorks),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE8D5DA)),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            activeIcon: Icon(Icons.explore),
-            label: 'Discover',
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF3DDE2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_outlined,
+                  color: primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'How GlowAI works',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: primary,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'See the five AI stages behind your try-on',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF8C8186)),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: primary),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.face_retouching_natural_outlined),
-            activeIcon: Icon(Icons.face_retouching_natural),
-            label: 'Try-On',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_border),
-            activeIcon: Icon(Icons.bookmark),
-            label: 'Saved',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -501,40 +475,43 @@ class HomeDashboard extends StatelessWidget {
                         }
                         if (snapshot.connectionState != ConnectionState.done) {
                           return const SizedBox(
-                            width: 36, height: 36,
+                            width: 36,
+                            height: 36,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           );
                         }
                         return ValueListenableBuilder<int>(
-                      valueListenable: SavedLooksService.changes,
-                      builder: (context, version, child) {
-                        final isSaved = SavedLooksService.isSaved(
-                          title,
-                          'Everyday',
-                        );
+                          valueListenable: SavedLooksService.changes,
+                          builder: (context, version, child) {
+                            final isSaved = SavedLooksService.isSaved(
+                              title,
+                              'Everyday',
+                            );
 
-                        return IconButton(
-                          tooltip: isSaved
-                              ? 'Remove from Saved Looks'
-                              : 'Save look',
-                          onPressed: () {
-                            _toggleLook(
-                              context,
-                              title: title,
-                              description: subtitle,
-                              color: colors.first,
-                              icon: icon,
+                            return IconButton(
+                              tooltip: isSaved
+                                  ? 'Remove from Saved Looks'
+                                  : 'Save look',
+                              onPressed: () {
+                                _toggleLook(
+                                  context,
+                                  title: title,
+                                  description: subtitle,
+                                  color: colors.first,
+                                  icon: icon,
+                                );
+                              },
+                              icon: Icon(
+                                isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                              ),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: primary,
+                              ),
                             );
                           },
-                          icon: Icon(
-                            isSaved ? Icons.bookmark : Icons.bookmark_border,
-                          ),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: primary,
-                          ),
-                        );
-                      },
                         );
                       },
                     ),

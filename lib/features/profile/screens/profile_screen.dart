@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/routing/app_router.dart';
+import '../../../core/routing/main_shell_scope.dart';
 import '../../../core/utils/app_snackbar.dart';
 import '../../../shared/widgets/circle_back_button.dart';
 import '../../../shared/widgets/secondary_button.dart';
@@ -21,7 +22,7 @@ class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.profileService, this.authService});
 
   final ProfileService? profileService;
-  final SupabaseAuthService? authService;
+  final SignOutService? authService;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -30,7 +31,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileService _service =
       widget.profileService ?? SupabaseProfileService();
-  late final SupabaseAuthService _authService =
+  late final SignOutService _authService =
       widget.authService ?? SupabaseAuthService();
 
   _ProfileStatus _status = _ProfileStatus.loading;
@@ -58,7 +59,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted || requestId != _requestId) return;
       setState(() {
         _profile = profile;
-        _status = profile == null ? _ProfileStatus.empty : _ProfileStatus.loaded;
+        _status = profile == null
+            ? _ProfileStatus.empty
+            : _ProfileStatus.loaded;
       });
     } on ProfileException catch (e) {
       if (!mounted || requestId != _requestId) return;
@@ -77,8 +80,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Reload counts after the user returns from Saved Looks or Favorites.
+  /// Saved Looks and Favorites are tabs of the main shell: inside it they are
+  /// selected (Back then returns to Profile, and Profile reloads its counts
+  /// when it is shown again). Standalone, they are pushed as before and the
+  /// counts reload when the user returns.
   Future<void> _open(String route) async {
+    final shell = MainShellScope.peek(context);
+    if (shell != null) {
+      if (route == AppRouter.savedLooks) {
+        shell.select(MainTab.savedLooks);
+        return;
+      }
+      if (route == AppRouter.favoriteProducts) {
+        shell.select(MainTab.favorites);
+        return;
+      }
+    }
     await Navigator.of(context).pushNamed(route);
     if (!mounted) return;
     if (route == AppRouter.savedLooks || route == AppRouter.favoriteProducts) {
@@ -86,26 +103,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _editProfile() =>
-      showAppSnackBar(context, 'Profile editing is coming soon.');
-
   Future<void> _logout() async {
     if (_isLoggingOut) return;
     setState(() => _isLoggingOut = true);
     try {
       await _authService.signOut();
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRouter.login,
-        (route) => false,
-      );
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppRouter.login, (route) => false);
     } on AuthException catch (e) {
       if (!mounted) return;
       showAppSnackBar(context, e.message, isError: true);
     } catch (_) {
       if (!mounted) return;
-      showAppSnackBar(context, 'Unable to log out. Please try again.',
-          isError: true);
+      showAppSnackBar(
+        context,
+        'Unable to log out. Please try again.',
+        isError: true,
+      );
     } finally {
       if (mounted) setState(() => _isLoggingOut = false);
     }
@@ -113,22 +128,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0,
-              ),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: CircleBackButton(),
-              ),
-            ),
-            Expanded(child: _buildBody()),
-          ],
+    // Standalone: Back pops the route. In the shell: Back goes to the tab the
+    // user came from, and is hidden when there is none.
+    final back = MainShellScope.backActionOf(context);
+
+    return TabActivationListener(
+      tab: MainTab.profile,
+      // Counts may have changed while another tab was open.
+      onActivated: _load,
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (back.visible)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    0,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    // Standalone keeps the button's own "pop if possible".
+                    child: CircleBackButton(
+                      onPressed: MainShellScope.peek(context) == null
+                          ? null
+                          : back.onPressed,
+                    ),
+                  ),
+                ),
+              Expanded(child: _buildBody()),
+            ],
+          ),
         ),
       ),
     );
@@ -142,7 +175,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return const ProfileStateView(
           icon: Icons.person_outline,
           title: 'No profile yet',
-          message: "Your profile isn't set up yet. Check back after you've "
+          message:
+              "Your profile isn't set up yet. Check back after you've "
               'finished setting up your account.',
         );
       case _ProfileStatus.error:
@@ -161,12 +195,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfile(UserProfile profile) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.lg,
+        AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.lg,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ProfileHeader(profile: profile, onEditProfile: _editProfile),
+          ProfileHeader(profile: profile),
           const SizedBox(height: AppSpacing.md),
           ProfileAnalysisCard(
             analysis: profile.latestFaceAnalysis,
@@ -194,11 +231,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          SecondaryButton(
-            label: 'Settings & Privacy',
-            onPressed: () => _open(AppRouter.settingsPrivacy),
           ),
           const SizedBox(height: AppSpacing.md),
           SecondaryButton(

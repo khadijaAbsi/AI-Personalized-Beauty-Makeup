@@ -12,10 +12,7 @@ import 'package:glowai/features/face_analysis/widgets/analysis_stage_list.dart';
 
 import 'helpers/analysis_test_helpers.dart';
 
-Widget _app({
-  required Widget home,
-  double textScale = 1.0,
-}) {
+Widget _app({required Widget home, double textScale = 1.0}) {
   return MaterialApp(
     onGenerateRoute: AppRouter.onGenerateRoute,
     builder: (context, child) => MediaQuery(
@@ -81,8 +78,9 @@ Future<void> _tapRetry(WidgetTester tester) async {
 
 void main() {
   group('initial state', () {
-    testWidgets('shows 0%, the first stage active and the rest waiting',
-        (tester) async {
+    testWidgets('shows 0%, the first stage active and the rest waiting', (
+      tester,
+    ) async {
       final service = await _pump(tester);
 
       expect(find.text('Analyzing your features'), findsOneWidget);
@@ -95,12 +93,17 @@ void main() {
         expect(find.text(label), findsOneWidget);
       }
 
-      expect(_stage(FaceAnalysisStage.detectingFace, AnalysisStageState.active),
-          findsOneWidget);
       expect(
-          _stage(FaceAnalysisStage.estimatingFaceShape,
-              AnalysisStageState.upcoming),
-          findsOneWidget);
+        _stage(FaceAnalysisStage.detectingFace, AnalysisStageState.active),
+        findsOneWidget,
+      );
+      expect(
+        _stage(
+          FaceAnalysisStage.estimatingFaceShape,
+          AnalysisStageState.upcoming,
+        ),
+        findsOneWidget,
+      );
       expect(_barValue(tester), 0);
       expect(_ringValue(tester), 0);
       expect(_weightOf(tester, 'Detecting your face'), FontWeight.w700);
@@ -113,37 +116,49 @@ void main() {
   });
 
   group('active state', () {
-    testWidgets('follows the events: done, active (bold) and waiting',
-        (tester) async {
+    testWidgets('follows the events: done, active (bold) and waiting', (
+      tester,
+    ) async {
       final service = await _pump(tester);
 
       service.emit(FaceAnalysisStage.estimatingSkinTone, 0.6);
       await _settle(tester);
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(_stage(FaceAnalysisStage.detectingFace, AnalysisStageState.done),
-          findsOneWidget);
       expect(
-          _stage(FaceAnalysisStage.estimatingFaceShape, AnalysisStageState.done),
-          findsOneWidget);
+        _stage(FaceAnalysisStage.detectingFace, AnalysisStageState.done),
+        findsOneWidget,
+      );
       expect(
-          _stage(FaceAnalysisStage.estimatingSkinTone, AnalysisStageState.active),
-          findsOneWidget);
+        _stage(FaceAnalysisStage.estimatingFaceShape, AnalysisStageState.done),
+        findsOneWidget,
+      );
       expect(
-          _stage(FaceAnalysisStage.preparingRecommendations,
-              AnalysisStageState.upcoming),
-          findsOneWidget);
+        _stage(FaceAnalysisStage.estimatingSkinTone, AnalysisStageState.active),
+        findsOneWidget,
+      );
+      expect(
+        _stage(
+          FaceAnalysisStage.preparingRecommendations,
+          AnalysisStageState.upcoming,
+        ),
+        findsOneWidget,
+      );
 
       expect(find.byIcon(Icons.check), findsNWidgets(2));
       expect(_weightOf(tester, 'Estimating skin tone'), FontWeight.w700);
-      expect(_weightOf(tester, 'Preparing recommendations'), isNot(FontWeight.w700));
+      expect(
+        _weightOf(tester, 'Preparing recommendations'),
+        isNot(FontWeight.w700),
+      );
       expect(_barValue(tester), 0.6);
       expect(_ringValue(tester), 0.6);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('the bar and ring only ever follow the service',
-        (tester) async {
+    testWidgets('the bar and ring only ever follow the service', (
+      tester,
+    ) async {
       final service = await _pump(tester);
 
       // Time passing without events changes nothing.
@@ -158,12 +173,15 @@ void main() {
       await _settle(tester);
       expect(_barValue(tester), 0.35);
       expect(
-          _stage(FaceAnalysisStage.estimatingFaceShape, AnalysisStageState.active),
-          findsOneWidget);
+        _stage(
+          FaceAnalysisStage.estimatingFaceShape,
+          AnalysisStageState.active,
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('the layout does not move as progress changes',
-        (tester) async {
+    testWidgets('the layout does not move as progress changes', (tester) async {
       final service = await _pump(tester);
       final heading = find.text('Analyzing your features');
       final bar = find.byType(AnalysisProgressBar);
@@ -184,8 +202,9 @@ void main() {
       expect(tester.getRect(card), before[2]);
     });
 
-    testWidgets('does not start again when the screen rebuilds',
-        (tester) async {
+    testWidgets('does not start again when the screen rebuilds', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.emit(FaceAnalysisStage.estimatingFaceShape, 0.4);
       await _settle(tester);
@@ -208,8 +227,9 @@ void main() {
   });
 
   group('completed state', () {
-    testWidgets('shows 100%, then opens results with the same photo',
-        (tester) async {
+    testWidgets('shows 100%, then opens results with the same photo', (
+      tester,
+    ) async {
       final service = await _pump(tester);
 
       service.emit(FaceAnalysisStage.preparingRecommendations, 0.9);
@@ -239,8 +259,9 @@ void main() {
       expect(service.analyzeCalls, 1);
     });
 
-    testWidgets('a repeated completed update still navigates only once',
-        (tester) async {
+    testWidgets('a repeated completed update still navigates only once', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.complete();
       await _settle(tester);
@@ -255,8 +276,9 @@ void main() {
       expect(find.byType(FaceAnalysisProcessingScreen), findsNothing);
     });
 
-    testWidgets('a running update (not completed) never opens Results',
-        (tester) async {
+    testWidgets('a running update (not completed) never opens Results', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.emit(FaceAnalysisStage.preparingRecommendations, 0.99);
       await _settle(tester);
@@ -278,8 +300,9 @@ void main() {
   });
 
   group('failed state', () {
-    testWidgets('shows a friendly message and Retry, and does not navigate',
-        (tester) async {
+    testWidgets('shows a friendly message and Retry, and does not navigate', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.emit(FaceAnalysisStage.estimatingSkinTone, 0.55);
       await _settle(tester);
@@ -305,8 +328,9 @@ void main() {
       expect(find.text('The server is busy.'), findsOneWidget);
     });
 
-    testWidgets('an unexpected error type still shows the friendly message',
-        (tester) async {
+    testWidgets('an unexpected error type still shows the friendly message', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.fail(StateError('boom'));
       await _settle(tester);
@@ -315,8 +339,9 @@ void main() {
       expect(find.textContaining('boom'), findsNothing);
     });
 
-    testWidgets('a stream that ends without completing counts as a failure',
-        (tester) async {
+    testWidgets('a stream that ends without completing counts as a failure', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.emit(FaceAnalysisStage.detectingFace, 0.2);
       await _settle(tester);
@@ -326,8 +351,9 @@ void main() {
       expect(_retry, findsOneWidget);
     });
 
-    testWidgets('Retry starts a fresh analysis once and can succeed',
-        (tester) async {
+    testWidgets('Retry starts a fresh analysis once and can succeed', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.emit(FaceAnalysisStage.estimatingSkinTone, 0.55);
       await _settle(tester);
@@ -342,8 +368,10 @@ void main() {
       expect(_retry, findsNothing);
       // Back at the start.
       expect(_barValue(tester), 0);
-      expect(_stage(FaceAnalysisStage.detectingFace, AnalysisStageState.active),
-          findsOneWidget);
+      expect(
+        _stage(FaceAnalysisStage.detectingFace, AnalysisStageState.active),
+        findsOneWidget,
+      );
 
       // Rebuilds don't start a third run.
       await tester.pump(const Duration(seconds: 1));
@@ -422,8 +450,9 @@ void main() {
       expect(service.cancelCount, 1);
     });
 
-    testWidgets('disposing during the 100% pause cancels the pending move on',
-        (tester) async {
+    testWidgets('disposing during the 100% pause cancels the pending move on', (
+      tester,
+    ) async {
       final service = await _pump(tester);
       service.complete();
       await _settle(tester);
@@ -436,8 +465,9 @@ void main() {
       expect(find.byType(FaceAnalysisResultsScreen), findsNothing);
     });
 
-    testWidgets('disposing the mock service run leaves no timers behind',
-        (tester) async {
+    testWidgets('disposing the mock service run leaves no timers behind', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 3.0;
       tester.view.physicalSize = const Size(390, 844) * 3.0;
       addTearDown(tester.view.reset);
@@ -453,8 +483,9 @@ void main() {
   });
 
   group('with the mock service (fake clock)', () {
-    testWidgets('runs through all four stages in about 7 seconds',
-        (tester) async {
+    testWidgets('runs through all four stages in about 7 seconds', (
+      tester,
+    ) async {
       tester.view.devicePixelRatio = 3.0;
       tester.view.physicalSize = const Size(390, 844) * 3.0;
       addTearDown(tester.view.reset);
@@ -467,26 +498,38 @@ void main() {
           ),
         ),
       );
-      expect(_stage(FaceAnalysisStage.detectingFace, AnalysisStageState.active),
-          findsOneWidget);
+      expect(
+        _stage(FaceAnalysisStage.detectingFace, AnalysisStageState.active),
+        findsOneWidget,
+      );
 
       await tester.pump(const Duration(milliseconds: 1600)); // 1.6 s
-      expect(_stage(FaceAnalysisStage.detectingFace, AnalysisStageState.done),
-          findsOneWidget);
       expect(
-          _stage(FaceAnalysisStage.estimatingFaceShape, AnalysisStageState.active),
-          findsOneWidget);
+        _stage(FaceAnalysisStage.detectingFace, AnalysisStageState.done),
+        findsOneWidget,
+      );
+      expect(
+        _stage(
+          FaceAnalysisStage.estimatingFaceShape,
+          AnalysisStageState.active,
+        ),
+        findsOneWidget,
+      );
 
       await tester.pump(const Duration(milliseconds: 2000)); // 3.6 s
       expect(
-          _stage(FaceAnalysisStage.estimatingSkinTone, AnalysisStageState.active),
-          findsOneWidget);
+        _stage(FaceAnalysisStage.estimatingSkinTone, AnalysisStageState.active),
+        findsOneWidget,
+      );
 
       await tester.pump(const Duration(milliseconds: 2000)); // 5.6 s
       expect(
-          _stage(FaceAnalysisStage.preparingRecommendations,
-              AnalysisStageState.active),
-          findsOneWidget);
+        _stage(
+          FaceAnalysisStage.preparingRecommendations,
+          AnalysisStageState.active,
+        ),
+        findsOneWidget,
+      );
       expect(_barValue(tester), closeTo(5.6 / 7, 0.01));
 
       await tester.pump(const Duration(milliseconds: 1500)); // 7.1 s
@@ -539,8 +582,7 @@ void main() {
         testWidgets(
           'no overflow at ${size.width.toInt()}x${size.height.toInt()}, ${scale}x text',
           (tester) async {
-            final service =
-                await _pump(tester, size: size, textScale: scale);
+            final service = await _pump(tester, size: size, textScale: scale);
             expect(tester.takeException(), isNull);
 
             service.emit(FaceAnalysisStage.estimatingSkinTone, 0.6);

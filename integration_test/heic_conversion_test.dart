@@ -115,8 +115,9 @@ void main() {
     });
   });
 
-  testWidgets('a real but too-small HEIC is rejected after conversion',
-      (tester) async {
+  testWidgets('a real but too-small HEIC is rejected after conversion', (
+    tester,
+  ) async {
     await tester.runAsync(() async {
       final result = await const ImageValidationService().validate(
         write('small.heic', smallHeicBytes()),
@@ -129,7 +130,10 @@ void main() {
   testWidgets('a corrupted HEIC fails with the friendly error', (tester) async {
     await tester.runAsync(() async {
       // Valid HEIC header, then garbage: the real decoder must refuse it.
-      final bytes = [...landscapeHeicBytes().sublist(0, 32), ...List.filled(500, 7)];
+      final bytes = [
+        ...landscapeHeicBytes().sublist(0, 32),
+        ...List.filled(500, 7),
+      ];
       final result = await const ImageValidationService().validate(
         write('corrupt.heic', bytes),
         source: PhotoSource.gallery,
@@ -139,8 +143,9 @@ void main() {
     });
   });
 
-  testWidgets('the converter throws ImageConversionException on bad input',
-      (tester) async {
+  testWidgets('the converter throws ImageConversionException on bad input', (
+    tester,
+  ) async {
     await tester.runAsync(() async {
       await expectLater(
         const PluginHeicConverter().convertToJpeg('${dir.path}/missing.heic'),

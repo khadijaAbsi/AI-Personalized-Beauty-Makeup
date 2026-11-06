@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:glowai/features/my_looks/screens/my_looks_screen.dart';
 import 'package:glowai/features/my_looks/services/my_looks_service.dart';
 import 'package:glowai/features/products/screens/recommended_products_page.dart';
-import 'package:glowai/core/routing/app_router.dart';
 
 class FinalMakeupResultsPage extends StatefulWidget {
   const FinalMakeupResultsPage({
@@ -90,7 +89,13 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
   void _viewProducts() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const RecommendedProductsPage()),
+      MaterialPageRoute(
+        builder: (_) => const RecommendedProductsPage(
+          heading: 'Recommended for You',
+          subheading:
+              'Discover beauty products picked for your next look \u2728',
+        ),
+      ),
     );
   }
 
@@ -99,38 +104,6 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
       context,
       MaterialPageRoute(builder: (_) => const MyLooksScreen()),
     );
-  }
-
-  void _handleNavigation(int index) {
-    switch (index) {
-      case 0: // Home
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          AppRouter.home,
-          (route) => false,
-        );
-        break;
-
-      case 1: // Discover
-        Navigator.pushNamed(context, AppRouter.chooseOccasion);
-        break;
-
-      case 2: // Try-On
-        // Already on the Try-On results page.
-        break;
-
-      case 3: // Saved Looks
-        Navigator.pushReplacementNamed(context, AppRouter.savedLooks);
-        break;
-
-      case 4: // Favorites
-        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
-        break;
-
-      case 5: // Profile
-        Navigator.pushNamed(context, AppRouter.profile);
-        break;
-    }
   }
 
   Widget _previewCard({
@@ -358,49 +331,6 @@ class _FinalMakeupResultsPageState extends State<FinalMakeupResultsPage> {
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        onTap: _handleNavigation,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: primary,
-        unselectedItemColor: const Color(0xFF9A9090),
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            activeIcon: Icon(Icons.explore),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.face_retouching_natural_outlined),
-            activeIcon: Icon(Icons.face_retouching_natural),
-            label: 'Try-On',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_border),
-            activeIcon: Icon(Icons.bookmark),
-            label: 'Saved',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }

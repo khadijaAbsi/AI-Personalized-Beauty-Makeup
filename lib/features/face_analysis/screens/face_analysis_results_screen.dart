@@ -20,7 +20,11 @@ import '../widgets/supported_attributes_card.dart';
 /// If [result] is null (e.g. the route was opened without data) it shows a
 /// friendly message instead of crashing.
 class FaceAnalysisResultsScreen extends StatefulWidget {
-  const FaceAnalysisResultsScreen({super.key, required this.result, this.photo});
+  const FaceAnalysisResultsScreen({
+    super.key,
+    required this.result,
+    this.photo,
+  });
 
   final FaceAnalysisResult? result;
 
@@ -61,18 +65,21 @@ class _FaceAnalysisResultsScreenState extends State<FaceAnalysisResultsScreen> {
   Widget build(BuildContext context) {
     final result = widget.result;
 
+    // The Continue button is pinned below the scrolling content, so it is
+    // always visible (above the bottom navigation bar) whatever the screen
+    // height or text size.
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Padding(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   AppSpacing.md,
                   AppSpacing.lg,
-                  AppSpacing.lg,
+                  AppSpacing.md,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,29 +93,35 @@ class _FaceAnalysisResultsScreenState extends State<FaceAnalysisResultsScreen> {
                       subtitle: result == null
                           ? null
                           : result.isMock
-                              ? 'Sample data, estimates only'
-                              : 'Estimates only',
+                          ? 'Sample data, estimates only'
+                          : 'Estimates only',
                     ),
                     const SizedBox(height: AppSpacing.md),
                     if (result == null)
                       const PortraitMessageCard(
-                        message: "We couldn't load your results. Please go "
+                        message:
+                            "We couldn't load your results. Please go "
                             'back and try again.',
                       )
                     else
                       ..._buildResults(context, result),
-                    const SizedBox(height: AppSpacing.lg),
-                    const Spacer(),
-                    if (result == null)
-                      PrimaryButton(
-                        label: 'Go back',
-                        onPressed: () => Navigator.of(context).maybePop(),
-                      )
-                    else
-                      PrimaryButton(label: 'Continue', onPressed: _openOccasion),
                   ],
                 ),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: result == null
+                  ? PrimaryButton(
+                      label: 'Go back',
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    )
+                  : PrimaryButton(label: 'Continue', onPressed: _openOccasion),
             ),
           ],
         ),
@@ -137,8 +150,9 @@ class _FaceAnalysisResultsScreenState extends State<FaceAnalysisResultsScreen> {
       ResultSummaryCard(
         label: 'Estimated skin tone',
         value: result.skinTone,
-        trailing:
-            swatchArgb == null ? null : SkinToneSwatch(color: Color(swatchArgb)),
+        trailing: swatchArgb == null
+            ? null
+            : SkinToneSwatch(color: Color(swatchArgb)),
       ),
       const SizedBox(height: AppSpacing.md),
       SupportedAttributesCard(attributes: attributes),

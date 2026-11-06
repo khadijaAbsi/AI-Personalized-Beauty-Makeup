@@ -20,12 +20,12 @@ class MockSavedLooksService {
     required Color previewColor,
     required IconData previewIcon,
   }) => SavedLooksService.saveLook(
-        title: title,
-        occasion: occasion,
-        description: description,
-        previewColor: previewColor,
-        previewIcon: previewIcon,
-      );
+    title: title,
+    occasion: occasion,
+    description: description,
+    previewColor: previewColor,
+    previewIcon: previewIcon,
+  );
 
   static Future<void> toggleSaveLook({
     required String title,
@@ -34,12 +34,12 @@ class MockSavedLooksService {
     required Color previewColor,
     required IconData previewIcon,
   }) => SavedLooksService.toggleSaveLook(
-        title: title,
-        occasion: occasion,
-        description: description,
-        previewColor: previewColor,
-        previewIcon: previewIcon,
-      );
+    title: title,
+    occasion: occasion,
+    description: description,
+    previewColor: previewColor,
+    previewIcon: previewIcon,
+  );
 
   Future<List<SavedLook>> fetchSavedLooks() =>
       SavedLooksService().fetchSavedLooks();

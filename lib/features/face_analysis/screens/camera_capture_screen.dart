@@ -27,7 +27,14 @@ class CameraCaptureScreen extends StatefulWidget {
   State<CameraCaptureScreen> createState() => _CameraCaptureScreenState();
 }
 
-enum _Phase { opening, preview, capturing, captured, unavailable, permissionDenied }
+enum _Phase {
+  opening,
+  preview,
+  capturing,
+  captured,
+  unavailable,
+  permissionDenied,
+}
 
 class _CameraCaptureScreenState extends State<CameraCaptureScreen>
     with WidgetsBindingObserver {
@@ -64,7 +71,9 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
   void _setPortraitLock({required bool locked}) {
     unawaited(
       SystemChrome.setPreferredOrientations(
-        locked ? const [DeviceOrientation.portraitUp] : const <DeviceOrientation>[],
+        locked
+            ? const [DeviceOrientation.portraitUp]
+            : const <DeviceOrientation>[],
       ).catchError((Object _) {}),
     );
   }
@@ -214,13 +223,15 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
       case _Phase.unavailable:
         return const _MessageView(
           icon: Icons.no_photography_outlined,
-          text: "We couldn't access a camera on this device. Go back and "
+          text:
+              "We couldn't access a camera on this device. Go back and "
               'choose a photo from your gallery instead.',
         );
       case _Phase.permissionDenied:
         return const _MessageView(
           icon: Icons.lock_outline,
-          text: 'Camera access is turned off. Go back to allow it, or choose '
+          text:
+              'Camera access is turned off. Go back to allow it, or choose '
               'a photo from your gallery instead.',
         );
     }
@@ -248,7 +259,9 @@ class _CameraCaptureScreenState extends State<CameraCaptureScreen>
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            _CaptureButton(onPressed: _phase == _Phase.preview ? _capture : null),
+            _CaptureButton(
+              onPressed: _phase == _Phase.preview ? _capture : null,
+            ),
           ],
         );
       case _Phase.captured:

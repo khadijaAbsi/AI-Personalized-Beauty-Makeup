@@ -35,10 +35,18 @@ void main() {
     });
 
     test('failFirstAttempts fails early loads, then succeeds', () async {
-      final service =
-          MockProfileService(delay: Duration.zero, failFirstAttempts: 2);
-      await expectLater(service.loadProfile(), throwsA(isA<ProfileException>()));
-      await expectLater(service.loadProfile(), throwsA(isA<ProfileException>()));
+      final service = MockProfileService(
+        delay: Duration.zero,
+        failFirstAttempts: 2,
+      );
+      await expectLater(
+        service.loadProfile(),
+        throwsA(isA<ProfileException>()),
+      );
+      await expectLater(
+        service.loadProfile(),
+        throwsA(isA<ProfileException>()),
+      );
       expect(await service.loadProfile(), same(mockUserProfile));
     });
 

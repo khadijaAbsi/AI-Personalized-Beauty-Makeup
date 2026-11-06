@@ -16,21 +16,22 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = OutlinedButton.styleFrom(
-      foregroundColor: AppColors.primary,
-      disabledForegroundColor: AppColors.disabledForeground,
-      minimumSize: const Size.fromHeight(56),
-      shape: const StadiumBorder(),
-      textStyle: Theme.of(context).textTheme.labelLarge,
-    ).copyWith(
-      side: WidgetStateProperty.resolveWith(
-        (states) => BorderSide(
-          color: states.contains(WidgetState.disabled)
-              ? AppColors.border
-              : AppColors.primary,
-        ),
-      ),
-    );
+    final style =
+        OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          disabledForegroundColor: AppColors.disabledForeground,
+          minimumSize: const Size.fromHeight(56),
+          shape: const StadiumBorder(),
+          textStyle: Theme.of(context).textTheme.labelLarge,
+        ).copyWith(
+          side: WidgetStateProperty.resolveWith(
+            (states) => BorderSide(
+              color: states.contains(WidgetState.disabled)
+                  ? AppColors.border
+                  : AppColors.primary,
+            ),
+          ),
+        );
 
     return OutlinedButton(
       onPressed: onPressed,

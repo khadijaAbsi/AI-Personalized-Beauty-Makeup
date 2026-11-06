@@ -14,7 +14,7 @@ import '../../features/face_analysis/screens/face_analysis_processing_screen.dar
 import '../../features/face_analysis/screens/face_analysis_results_screen.dart';
 
 // Home and occasion selection
-import '../../features/home/screens/home_dashboard.dart';
+import '../../features/home/screens/how_glowai_works_screen.dart';
 import '../../features/home/screens/occasion_selection_page.dart';
 
 // Makeup recommendations
@@ -24,29 +24,34 @@ import '../../features/looks/screens/recommended_looks_gallery.dart';
 import '../../features/products/screens/recommended_products_page.dart';
 
 // History and favorites
-import '../../features/history/screens/saved_looks_screen.dart';
-import '../../features/history/screens/favorite_products_page.dart';
 import '../../features/my_looks/screens/my_looks_screen.dart';
 
 // Profile and settings
-import '../../features/profile/screens/profile_screen.dart';
-import '../../features/profile/screens/settings_privacy_screen.dart';
+
+// Persistent bottom-navigation shell
+import 'main_shell.dart';
+import 'main_shell_scope.dart';
 
 /// Centralized named routing for GlowAI.
 ///
-/// Authentication is currently mocked.
-/// The Dashboard is the temporary starting screen.
+/// Authentication is handled by Supabase (see `AuthGate`).
 ///
-/// Real authentication and session handling will be
-/// integrated later using Supabase.
+/// Home, Explore, Saved Looks, Favorites and Profile are the five tabs of the
+/// persistent [MainShell]; their route names open the shell on that tab.
 abstract final class AppRouter {
   // Authentication
   static const String signup = '/';
   static const String login = '/login';
   static const String authGate = '/auth';
 
-  // Home
+  // Main tabs (all of these open the persistent bottom-navigation shell)
   static const String home = '/home';
+  static const String explore = '/explore';
+  // savedLooks, favoriteProducts and profile are declared below; they are
+  // tabs of the same shell.
+
+  // Home extras
+  static const String howItWorks = '/how-it-works';
 
   // Face analysis
   static const String faceAnalysisGuide = '/face-analysis-guide';
@@ -61,12 +66,38 @@ abstract final class AppRouter {
 
   // Profile
   static const String profile = '/profile';
-  static const String settingsPrivacy = '/settings-privacy';
 
   // History and favorites
   static const String savedLooks = '/saved-looks';
   static const String favoriteProducts = '/favorite-products';
   static const String myLooks = '/my-looks';
+
+  /// The named route that opens the shell on [tab].
+  static String routeForTab(MainTab tab) {
+    switch (tab) {
+      case MainTab.home:
+        return home;
+      case MainTab.explore:
+        return explore;
+      case MainTab.savedLooks:
+        return savedLooks;
+      case MainTab.favorites:
+        return favoriteProducts;
+      case MainTab.profile:
+        return profile;
+    }
+  }
+
+  /// Leaves any full-screen flow and shows the main shell on [tab].
+  ///
+  /// Clears the stack so there is exactly one shell and one bar. Use it from
+  /// screens that are not tabs themselves (for example the final try-on
+  /// results). Inside the shell, use the controller from [MainShellScope]
+  /// instead, which switches tabs without touching the Navigator.
+  static Future<void> goToTab(BuildContext context, MainTab tab) {
+    return Navigator.of(context)
+        .pushNamedAndRemoveUntil(routeForTab(tab), (route) => false);
+  }
 
   /// Generates the appropriate screen for each named route.
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -89,7 +120,10 @@ abstract final class AppRouter {
       // ---------------------------------
 
       case home:
-        return _page(settings, const HomeDashboard());
+        return _page(settings, const MainShell(initialTab: MainTab.home));
+
+      case howItWorks:
+        return _page(settings, const HowGlowAiWorksScreen());
 
       // ---------------------------------
       // FACE ANALYSIS
@@ -166,28 +200,30 @@ abstract final class AppRouter {
         // let the user select one first.
         return _page(settings, const OccasionSelectionPage());
 
+      // Standalone product list (pushed, with its own Back button).
+      // The Explore tab shows the same page inside the shell.
       case recommendedProducts:
         return _page(settings, const RecommendedProductsPage());
+
+      case explore:
+        return _page(settings, const MainShell(initialTab: MainTab.explore));
 
       // ---------------------------------
       // PROFILE AND SETTINGS
       // ---------------------------------
 
       case profile:
-        return _page(settings, const ProfileScreen());
-
-      case settingsPrivacy:
-        return _page(settings, const SettingsPrivacyScreen());
+        return _page(settings, const MainShell(initialTab: MainTab.profile));
 
       // ---------------------------------
       // HISTORY AND FAVORITES
       // ---------------------------------
 
       case savedLooks:
-        return _page(settings, const SavedLooksScreen());
+        return _page(settings, const MainShell(initialTab: MainTab.savedLooks));
 
       case favoriteProducts:
-        return _page(settings, const FavoriteProductsPage());
+        return _page(settings, const MainShell(initialTab: MainTab.favorites));
 
       case myLooks:
         return _page(settings, const MyLooksScreen());
@@ -197,7 +233,7 @@ abstract final class AppRouter {
       // ---------------------------------
 
       default:
-        return _page(settings, const HomeDashboard());
+        return _page(settings, const MainShell(initialTab: MainTab.home));
     }
   }
 

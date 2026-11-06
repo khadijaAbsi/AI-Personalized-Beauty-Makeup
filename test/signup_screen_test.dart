@@ -18,7 +18,10 @@ Future<void> _pumpSignup(WidgetTester tester, AuthService service) async {
   );
 }
 
-Future<void> _fillValidForm(WidgetTester tester, {String confirm = 'password123'}) async {
+Future<void> _fillValidForm(
+  WidgetTester tester, {
+  String confirm = 'password123',
+}) async {
   final fields = find.byType(TextFormField);
   await tester.enterText(fields.at(0), 'Layla Haddad');
   await tester.enterText(fields.at(1), 'layla@example.com');
@@ -29,8 +32,9 @@ Future<void> _fillValidForm(WidgetTester tester, {String confirm = 'password123'
 Finder get _submitButton => find.widgetWithText(FilledButton, 'Create Account');
 
 void main() {
-  testWidgets('empty form shows all validation errors and does not submit',
-      (tester) async {
+  testWidgets('empty form shows all validation errors and does not submit', (
+    tester,
+  ) async {
     final service = FakeAuthService();
     await _pumpSignup(tester, service);
 
@@ -71,8 +75,9 @@ void main() {
     expect(service.signUpCalls, 0);
   });
 
-  testWidgets('valid form shows loading, then a success message',
-      (tester) async {
+  testWidgets('valid form shows loading, then a success message', (
+    tester,
+  ) async {
     final service = FakeAuthService();
     await _pumpSignup(tester, service);
 
@@ -91,8 +96,9 @@ void main() {
   });
 
   testWidgets('service errors are shown to the user', (tester) async {
-    final service =
-        FakeAuthService(error: const AuthException('Email already in use'));
+    final service = FakeAuthService(
+      error: const AuthException('Email already in use'),
+    );
     await _pumpSignup(tester, service);
 
     await _fillValidForm(tester);

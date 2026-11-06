@@ -42,14 +42,17 @@ class PortraitMessageCard extends StatelessWidget {
                 Icon(
                   Icons.info_outline,
                   size: 20,
-                  color: isError ? theme.colorScheme.error : AppColors.accentDark,
+                  color: isError
+                      ? theme.colorScheme.error
+                      : AppColors.accentDark,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     message,
-                    style: theme.textTheme.bodyMedium
-                        ?.copyWith(color: AppColors.textPrimary),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -57,7 +60,10 @@ class PortraitMessageCard extends StatelessWidget {
             if (actionLabel != null)
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(onPressed: onAction, child: Text(actionLabel!)),
+                child: TextButton(
+                  onPressed: onAction,
+                  child: Text(actionLabel!),
+                ),
               ),
           ],
         ),

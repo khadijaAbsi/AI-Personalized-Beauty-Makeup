@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+
 import 'package:cross_file/cross_file.dart';
+
 import '../models/selected_photo.dart';
 import 'heic_converter.dart';
 
@@ -60,7 +62,6 @@ class ImageValidationResult {
   bool get isValid => photo != null;
 }
 
-
 /// Web adapter: uses browser-compatible XFile bytes; never uses dart:io File.
 /// HEIC is rejected on Web; original mobile conversion remains unchanged.
 class ImageValidationService {
@@ -73,29 +74,46 @@ class ImageValidationService {
   final int minDimension;
   final HeicConverter heicConverter;
 
-  Future<ImageValidationResult> validate(String path, {required PhotoSource source}) async {
+  Future<ImageValidationResult> validate(
+    String path, {
+    required PhotoSource source,
+  }) async {
     final Uint8List bytes;
     try {
       bytes = await XFile(path).readAsBytes();
     } catch (_) {
-      return const ImageValidationResult.invalid(ImageValidationError.fileAccess);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.fileAccess,
+      );
     }
     if (bytes.isEmpty) {
-      return const ImageValidationResult.invalid(ImageValidationError.unreadable);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.unreadable,
+      );
     }
     if (bytes.length > maxFileSizeBytes) {
       return const ImageValidationResult.invalid(ImageValidationError.tooLarge);
     }
     final PhotoFormat format;
-    if (bytes.length >= 3 && bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff) {
+    if (bytes.length >= 3 &&
+        bytes[0] == 0xff &&
+        bytes[1] == 0xd8 &&
+        bytes[2] == 0xff) {
       format = PhotoFormat.jpeg;
     } else if (bytes.length >= 8 &&
-        bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4e &&
-        bytes[3] == 0x47 && bytes[4] == 0x0d && bytes[5] == 0x0a &&
-        bytes[6] == 0x1a && bytes[7] == 0x0a) {
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4e &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0d &&
+        bytes[5] == 0x0a &&
+        bytes[6] == 0x1a &&
+        bytes[7] == 0x0a) {
       format = PhotoFormat.png;
     } else {
-      return const ImageValidationResult.invalid(ImageValidationError.unsupportedFormat);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.unsupportedFormat,
+      );
     }
     ui.Codec? codec;
     ui.Image? image;
@@ -104,15 +122,24 @@ class ImageValidationService {
       final frame = await codec.getNextFrame();
       image = frame.image;
       if (image.width < minDimension || image.height < minDimension) {
-        return const ImageValidationResult.invalid(ImageValidationError.tooSmall);
+        return const ImageValidationResult.invalid(
+          ImageValidationError.tooSmall,
+        );
       }
-      return ImageValidationResult.valid(SelectedPhoto(
-        path: path, source: source, format: format,
-        width: image.width, height: image.height,
-        sizeInBytes: bytes.length,
-      ));
+      return ImageValidationResult.valid(
+        SelectedPhoto(
+          path: path,
+          source: source,
+          format: format,
+          width: image.width,
+          height: image.height,
+          sizeInBytes: bytes.length,
+        ),
+      );
     } catch (_) {
-      return const ImageValidationResult.invalid(ImageValidationError.unreadable);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.unreadable,
+      );
     } finally {
       image?.dispose();
       codec?.dispose();

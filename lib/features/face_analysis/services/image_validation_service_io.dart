@@ -94,7 +94,9 @@ class ImageValidationService {
     try {
       header = await _readHeader(File(path));
     } on FileSystemException {
-      return const ImageValidationResult.invalid(ImageValidationError.fileAccess);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.fileAccess,
+      );
     }
 
     if (_sniff(header) == _Signature.heif) {
@@ -111,7 +113,9 @@ class ImageValidationService {
     try {
       sourceLength = await File(path).length();
     } on FileSystemException {
-      return const ImageValidationResult.invalid(ImageValidationError.fileAccess);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.fileAccess,
+      );
     }
     if (sourceLength > PhotoRules.maxHeifSourceBytes) {
       return const ImageValidationResult.invalid(ImageValidationError.tooLarge);
@@ -127,7 +131,11 @@ class ImageValidationService {
       );
     }
 
-    final result = await _validateFile(jpegPath, source: source, converted: true);
+    final result = await _validateFile(
+      jpegPath,
+      source: source,
+      converted: true,
+    );
     if (!result.isValid) {
       // Don't leave a rejected conversion behind.
       unawaited(deleteTempFileQuietly(jpegPath));
@@ -152,7 +160,9 @@ class ImageValidationService {
     try {
       length = await file.length();
     } on FileSystemException {
-      return const ImageValidationResult.invalid(ImageValidationError.fileAccess);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.fileAccess,
+      );
     }
     if (length == 0) return ImageValidationResult.invalid(unreadable);
     if (length > maxFileSizeBytes) {
@@ -163,7 +173,9 @@ class ImageValidationService {
     try {
       bytes = await file.readAsBytes();
     } on FileSystemException {
-      return const ImageValidationResult.invalid(ImageValidationError.fileAccess);
+      return const ImageValidationResult.invalid(
+        ImageValidationError.fileAccess,
+      );
     }
 
     final signature = _sniff(bytes);

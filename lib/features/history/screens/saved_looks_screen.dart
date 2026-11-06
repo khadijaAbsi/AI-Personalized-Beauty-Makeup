@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:glowai/core/routing/main_shell_scope.dart';
 import 'package:glowai/core/theme/app_colors.dart';
 import 'package:glowai/features/history/models/saved_look.dart';
 import 'package:glowai/features/history/services/saved_looks_service.dart';
 import 'package:glowai/features/looks/screens/makeup_look_details_page.dart';
-import 'package:glowai/core/routing/app_router.dart';
 
 class SavedLooksScreen extends StatefulWidget {
   const SavedLooksScreen({super.key});
@@ -42,11 +42,15 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
     _loadLooks();
   }
 
-  Future<void> _loadLooks() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+  /// [silent] refreshes the list in place (no spinner), for when the tab is
+  /// shown again after looks may have been saved elsewhere.
+  Future<void> _loadLooks({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
 
     try {
       final results = await _service.fetchSavedLooks();
@@ -55,10 +59,13 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
 
       setState(() {
         _looks = results;
+        _errorMessage = null;
         _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
+      // A failed silent refresh keeps the list the user already sees.
+      if (silent && _errorMessage == null && !_isLoading) return;
 
       setState(() {
         _errorMessage = 'We could not load your saved looks.';
@@ -341,158 +348,104 @@ class _SavedLooksScreenState extends State<SavedLooksScreen> {
     );
   }
 
-  void _handleNavigation(int index) {
-    switch (index) {
-      case 0: // Home
-        Navigator.pushReplacementNamed(context, AppRouter.home);
-        break;
-
-      case 1: // Discover
-        Navigator.pushNamed(context, AppRouter.chooseOccasion);
-        break;
-
-      case 2: // Try-On
-        Navigator.pushNamed(context, AppRouter.faceAnalysisGuide);
-        break;
-
-      case 3: // Saved Looks
-        // Already on Saved Looks.
-        break;
-
-      case 4: // Favorites
-        Navigator.pushReplacementNamed(context, AppRouter.favoriteProducts);
-        break;
-
-      case 5: // Profile
-        Navigator.pushNamed(context, AppRouter.profile);
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.warmIvory,
-      appBar: AppBar(
+    // Standalone: Back pops the route. In the shell: Back goes to the tab the
+    // user came from, and is hidden when there is none.
+    final back = MainShellScope.backActionOf(context);
+
+    return TabActivationListener(
+      tab: MainTab.savedLooks,
+      onActivated: () => _loadLooks(silent: true),
+      child: Scaffold(
         backgroundColor: AppColors.warmIvory,
-        foregroundColor: AppColors.primary,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          'GlowAI',
-          style: TextStyle(
-            color: AppColors.accent,
-            fontSize: 23,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
+        appBar: AppBar(
+          backgroundColor: AppColors.warmIvory,
+          foregroundColor: AppColors.primary,
+          elevation: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          leading: back.visible
+              ? IconButton(
+                  tooltip: 'Back',
+                  onPressed: back.onPressed,
+                  icon: const Icon(Icons.arrow_back_ios_new),
+                )
+              : null,
+          title: const Text(
+            'GlowAI',
+            style: TextStyle(
+              color: AppColors.accent,
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Saved Looks',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.primaryText,
-                  fontWeight: FontWeight.bold,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Saved Looks',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppColors.primaryText,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '${_looks.length} looks saved for your inspiration',
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: AppColors.secondaryText),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _filters.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final filter = _filters[index];
-                    final isSelected = _selectedFilter == filter;
+                const SizedBox(height: 6),
+                Text(
+                  '${_looks.length} looks saved for your inspiration',
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: AppColors.secondaryText),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 40,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _filters.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final filter = _filters[index];
+                      final isSelected = _selectedFilter == filter;
 
-                    return ChoiceChip(
-                      label: Text(filter),
-                      selected: isSelected,
-                      onSelected: (_) {
-                        setState(() {
-                          _selectedFilter = filter;
-                        });
-                      },
-                      selectedColor: AppColors.blushPink,
-                      backgroundColor: AppColors.white,
-                      side: BorderSide(
-                        color: isSelected ? AppColors.accent : AppColors.border,
-                      ),
-                      labelStyle: TextStyle(
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.secondaryText,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                      ),
-                      showCheckmark: false,
-                    );
-                  },
+                      return ChoiceChip(
+                        label: Text(filter),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() {
+                            _selectedFilter = filter;
+                          });
+                        },
+                        selectedColor: AppColors.blushPink,
+                        backgroundColor: AppColors.white,
+                        side: BorderSide(
+                          color: isSelected
+                              ? AppColors.accent
+                              : AppColors.border,
+                        ),
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.secondaryText,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                        showCheckmark: false,
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              Expanded(child: _buildContent()),
-            ],
+                const SizedBox(height: 18),
+                Expanded(child: _buildContent()),
+              ],
+            ),
           ),
         ),
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 3,
-        onTap: _handleNavigation,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.white,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.hintText,
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            activeIcon: Icon(Icons.explore),
-            label: 'Discover',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.face_retouching_natural_outlined),
-            activeIcon: Icon(Icons.face_retouching_natural),
-            label: 'Try-On',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_border),
-            activeIcon: Icon(Icons.bookmark),
-            label: 'Saved',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }

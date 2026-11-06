@@ -60,20 +60,31 @@ class TestImages {
 
   /// A valid HEIF header (so it is recognised as HEIC) followed by garbage:
   /// no decoder can open it.
-  String corruptedHeic(String name) =>
-      _write(name, [..._ftyp('heic', ['mif1', 'heic']), ...List.filled(300, 7)]);
+  String corruptedHeic(String name) => _write(name, [
+    ..._ftyp('heic', ['mif1', 'heic']),
+    ...List.filled(300, 7),
+  ]);
 
   /// Only an `ftyp` box with the given brands, to test format detection.
-  String ftypOnly(String name, String major, [List<String> compatible = const []]) =>
-      _write(name, [..._ftyp(major, compatible), ...List.filled(64, 0)]);
+  String ftypOnly(
+    String name,
+    String major, [
+    List<String> compatible = const [],
+  ]) => _write(name, [..._ftyp(major, compatible), ...List.filled(64, 0)]);
 
   static List<int> _ftyp(String major, List<String> compatible) {
     final size = 16 + compatible.length * 4;
     return [
-      0, 0, 0, size,
+      0,
+      0,
+      0,
+      size,
       ...'ftyp'.codeUnits,
       ...major.codeUnits,
-      0, 0, 0, 0,
+      0,
+      0,
+      0,
+      0,
       for (final brand in compatible) ...brand.codeUnits,
     ];
   }
@@ -120,13 +131,17 @@ class FakeHeicConverter implements HeicConverter {
   Future<String> convertToJpeg(String sourcePath) async {
     sources.add(sourcePath);
     if (error != null) throw error!;
-    final file = File(
-      '${Directory.systemTemp.path}/fake_converted_'
-      '${sources.length}_${DateTime.now().microsecondsSinceEpoch}.jpg',
-    )..writeAsBytesSync(
-        outputBytes ??
-            img.encodeJpg(img.Image(width: width, height: height), quality: 85),
-      );
+    final file =
+        File(
+          '${Directory.systemTemp.path}/fake_converted_'
+          '${sources.length}_${DateTime.now().microsecondsSinceEpoch}.jpg',
+        )..writeAsBytesSync(
+          outputBytes ??
+              img.encodeJpg(
+                img.Image(width: width, height: height),
+                quality: 85,
+              ),
+        );
     outputs.add(file.path);
     return file.path;
   }

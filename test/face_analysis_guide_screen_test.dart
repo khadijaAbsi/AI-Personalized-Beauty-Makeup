@@ -26,22 +26,27 @@ Widget _app({Widget? home, double textScale = 1.0}) {
 Finder get _continueButton => find.widgetWithText(FilledButton, 'Continue');
 
 void main() {
-  testWidgets('shows heading, instructions and privacy info',
-      (tester) async {
+  testWidgets('shows heading, instructions and privacy info', (tester) async {
     _setScreen(tester, const Size(390, 844));
     await tester.pumpWidget(_app());
 
     expect(find.text("Let's analyze your face"), findsOneWidget);
-    expect(find.text('A good photo gives the most accurate estimates.'),
-        findsOneWidget);
+    expect(
+      find.text('A good photo gives the most accurate estimates.'),
+      findsOneWidget,
+    );
 
     expect(find.text('Face the camera straight on'), findsOneWidget);
     expect(find.text('Soft, even natural light'), findsOneWidget);
     expect(find.text('No filters, sunglasses or heavy makeup'), findsOneWidget);
-    expect(find.text('Keep your facial features clearly visible'),
-        findsOneWidget);
-    expect(find.text('Make sure your full face is visible and in focus'),
-        findsOneWidget);
+    expect(
+      find.text('Keep your facial features clearly visible'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Make sure your full face is visible and in focus'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.check), findsNWidgets(5));
 
     // The old hair instruction and the demo illustration are gone.
@@ -59,8 +64,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Continue opens the Add Your Portrait destination',
-      (tester) async {
+  testWidgets('Continue opens the Add Your Portrait destination', (
+    tester,
+  ) async {
     _setScreen(tester, const Size(390, 844));
     await tester.pumpWidget(_app());
 
@@ -81,8 +87,9 @@ void main() {
           builder: (context) => Scaffold(
             body: Center(
               child: TextButton(
-                onPressed: () => Navigator.of(context)
-                    .pushNamed(AppRouter.faceAnalysisGuide),
+                onPressed: () =>
+                    Navigator.of(context)
+                        .pushNamed(AppRouter.faceAnalysisGuide),
                 child: const Text('Open guide'),
               ),
             ),
@@ -102,8 +109,9 @@ void main() {
     expect(find.text('Open guide'), findsOneWidget);
   });
 
-  testWidgets('Back is safe when the screen is opened directly',
-      (tester) async {
+  testWidgets('Back is safe when the screen is opened directly', (
+    tester,
+  ) async {
     _setScreen(tester, const Size(390, 844));
     await tester.pumpWidget(_app());
 
@@ -120,18 +128,20 @@ void main() {
 
     for (final size in sizes) {
       for (final scale in scales) {
-        testWidgets('${size.width.toInt()}x${size.height.toInt()} at ${scale}x text',
-            (tester) async {
-          _setScreen(tester, size);
-          await tester.pumpWidget(_app(textScale: scale));
+        testWidgets(
+          '${size.width.toInt()}x${size.height.toInt()} at ${scale}x text',
+          (tester) async {
+            _setScreen(tester, size);
+            await tester.pumpWidget(_app(textScale: scale));
 
-          // Everything, including Continue, can be scrolled into view.
-          await tester.ensureVisible(_continueButton);
-          await tester.pump();
+            // Everything, including Continue, can be scrolled into view.
+            await tester.ensureVisible(_continueButton);
+            await tester.pump();
 
-          expect(_continueButton, findsOneWidget);
-          expect(tester.takeException(), isNull);
-        });
+            expect(_continueButton, findsOneWidget);
+            expect(tester.takeException(), isNull);
+          },
+        );
       }
     }
   });

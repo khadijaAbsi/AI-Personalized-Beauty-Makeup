@@ -41,12 +41,13 @@ class FaceValidationResult {
 
   /// Nothing was checked. This must never be shown as "face verified".
   const FaceValidationResult.notPerformed()
-      : this._(FaceCheckStatus.notPerformed, const []);
+    : this._(FaceCheckStatus.notPerformed, const []);
 
-  const FaceValidationResult.passed() : this._(FaceCheckStatus.passed, const []);
+  const FaceValidationResult.passed()
+    : this._(FaceCheckStatus.passed, const []);
 
   const FaceValidationResult.failed(List<FaceIssue> issues)
-      : this._(FaceCheckStatus.failed, issues);
+    : this._(FaceCheckStatus.failed, issues);
 
   final FaceCheckStatus status;
   final List<FaceIssue> issues;

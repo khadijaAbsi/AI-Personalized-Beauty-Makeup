@@ -11,14 +11,14 @@ import 'package:integration_test/integration_test.dart';
 /// theme, fonts and painters:
 ///
 ///   loading -> profile -> Saved looks -> back -> Favorite products -> back
-///   -> Settings & Privacy -> back -> Edit profile
 ///
 /// Run:  flutter test integration_test/profile_flow_test.dart -d emulator-5554
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('profile screen: data, placeholders, settings, back',
-      (tester) async {
+  testWidgets('profile screen: data, placeholders, settings, back', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light,
@@ -36,7 +36,10 @@ void main() {
     expect(find.text('12'), findsOneWidget);
     expect(find.text('8'), findsOneWidget);
 
-    Future<void> openAndGoBack(String label, String expectedOnNextScreen) async {
+    Future<void> openAndGoBack(
+      String label,
+      String expectedOnNextScreen,
+    ) async {
       await tester.ensureVisible(find.text(label));
       await tester.pumpAndSettle();
       await tester.tap(find.text(label));
@@ -49,13 +52,9 @@ void main() {
 
     await openAndGoBack('Saved looks', 'Temporary placeholder');
     await openAndGoBack('Favorite products', 'Temporary placeholder');
-    await openAndGoBack('Settings & Privacy', 'Coming soon');
+    expect(find.text('Settings & Privacy'), findsNothing);
 
-    // Edit profile only gives feedback.
-    await tester.ensureVisible(find.text('Edit profile'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Edit profile'));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Profile editing is coming soon.'), findsOneWidget);
+    // Account details are not editable in the app.
+    expect(find.text('Edit profile'), findsNothing);
   });
 }

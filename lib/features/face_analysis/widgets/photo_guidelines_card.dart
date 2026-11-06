@@ -30,7 +30,11 @@ class PhotoGuidelinesCard extends StatelessWidget {
               children: [
                 const Padding(
                   padding: EdgeInsets.only(top: 1),
-                  child: Icon(Icons.check, size: 20, color: AppColors.accentDark),
+                  child: Icon(
+                    Icons.check,
+                    size: 20,
+                    color: AppColors.accentDark,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(child: Text(guidelines[i], style: textStyle)),

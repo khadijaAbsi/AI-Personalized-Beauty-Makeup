@@ -28,6 +28,13 @@ abstract interface class AuthService {
   Future<void> signIn({required String email, required String password});
 }
 
+/// Ends the current session. Kept separate from [AuthService] so Profile can
+/// log out without depending on sign-in or registration, and so tests can
+/// inject a fake.
+abstract interface class SignOutService {
+  Future<void> signOut();
+}
+
 /// Real Supabase Authentication implementation.
 ///
 /// Handles:
@@ -36,7 +43,7 @@ abstract interface class AuthService {
 /// - Supabase authentication errors
 /// - Session access
 /// - Logout
-class SupabaseAuthService implements AuthService {
+class SupabaseAuthService implements AuthService, SignOutService {
   SupabaseAuthService({supabase.SupabaseClient? client})
     : _client = client ?? supabase.Supabase.instance.client;
 
@@ -113,6 +120,7 @@ class SupabaseAuthService implements AuthService {
   }
 
   /// Sign out the currently authenticated user.
+  @override
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();

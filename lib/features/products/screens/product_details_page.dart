@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glowai/features/favorites/services/favorites_service.dart';
+import 'package:glowai/features/products/models/product.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final String name;
@@ -9,6 +10,13 @@ class ProductDetailsPage extends StatefulWidget {
   final String category;
   final String? imageUrl;
 
+  /// Shade name, when relevant for the product.
+  final String? shade;
+
+  /// Product tint. Also the colour saved with the favorite.
+  final Color? color;
+  final IconData? icon;
+
   const ProductDetailsPage({
     super.key,
     this.name = 'Soft Matte Lipstick',
@@ -17,14 +25,49 @@ class ProductDetailsPage extends StatefulWidget {
     this.description = 'A creamy, comfortable lipstick with a beautiful matte finish, designed for a long-lasting and elegant look.',
     this.category = 'Lips',
     this.imageUrl,
+    this.shade,
+    this.color,
+    this.icon,
   });
+
+  /// Opens the details of a catalog or favorite [Product].
+  factory ProductDetailsPage.fromProduct(Product product, {Key? key}) {
+    return ProductDetailsPage(
+      key: key,
+      name: product.name,
+      brand: product.brand,
+      price: product.price ?? 0,
+      description: product.description,
+      category: product.category,
+      imageUrl: product.imageUrl,
+      shade: product.shade,
+      color: product.color,
+      icon: product.icon,
+    );
+  }
 
   @override
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
-  bool get isFavorite => FavoritesService.instance.isFavorite(widget.name);
+  /// Same shape the catalog saves, so both screens agree on the favorite key.
+  Map<String, dynamic> get _favoriteMap => {
+    'name': widget.name,
+    'brand': widget.brand,
+    'price': widget.price,
+    'color': widget.color ?? const Color(0xFFE8C0B8),
+    'icon': widget.icon ?? Icons.brush,
+    'category': widget.category,
+    'shade': widget.shade,
+    'imageUrl': widget.imageUrl,
+    'description': widget.description,
+  };
+
+  bool get isFavorite =>
+      FavoritesService.instance.isFavoriteProduct(_favoriteMap);
+
+  bool get _isPending => FavoritesService.instance.isPending(_favoriteMap);
 
   static const Color primary = Color(0xFF4A1D3A);
   static const Color accent = Color(0xFFB76E79);
@@ -59,21 +102,15 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     try {
       await FavoritesService.instance.ensureLoaded();
       final wasFavorite = isFavorite;
-      await FavoritesService.instance.toggleFavorite({
-        'name': widget.name,
-        'brand': widget.brand,
-        'price': widget.price,
-        'color': const Color(0xFFE8C0B8),
-        'icon': Icons.brush,
-        'category': widget.category,
-        'imageUrl': widget.imageUrl,
-        'description': widget.description,
-      });
+      await FavoritesService.instance.toggleFavorite(_favoriteMap);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(wasFavorite
-            ? 'Removed from favorites' : 'Added to favorites'),
-            duration: const Duration(seconds: 1)),
+        SnackBar(
+          content: Text(
+            wasFavorite ? 'Removed from favorites' : 'Added to favorites',
+          ),
+          duration: const Duration(seconds: 1),
+        ),
       );
     } catch (_) {
       if (!mounted) return;
@@ -106,7 +143,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            onPressed: _toggleFavorite,
+            onPressed: _isPending ? null : _toggleFavorite,
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
               color: accent,
@@ -125,7 +162,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               width: double.infinity,
               height: 280,
               decoration: BoxDecoration(
-                color: const Color(0xFFF3DDE2),
+                color: widget.color ?? const Color(0xFFF3DDE2),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Stack(
@@ -219,17 +256,47 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               ],
             ),
 
-            const SizedBox(height: 16),
-
-            // Price
-            Text(
-              '\$${widget.price.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                color: primary,
+            if (widget.shade != null && widget.shade!.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Row(
+                key: const ValueKey('product-shade'),
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: widget.color ?? const Color(0xFFE8C0B8),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFE8D5DA)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Shade: ${widget.shade}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
+            ],
+
+            // Price is optional: hidden when the product has none.
+            if (widget.price > 0) ...[
+              const SizedBox(height: 16),
+              Text(
+                '\$${widget.price.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.bold,
+                  color: primary,
+                ),
+              ),
+            ],
 
             const SizedBox(height: 24),
             const Divider(color: Color(0xFFE8D5DA)),
@@ -264,7 +331,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
               width: double.infinity,
               height: 52,
               child: OutlinedButton.icon(
-                onPressed: _toggleFavorite,
+                key: const ValueKey('product-favorite-button'),
+                onPressed: _isPending ? null : _toggleFavorite,
                 icon: Icon(isFavorite ? Icons.favorite : Icons.favorite_border),
                 label: Text(
                   isFavorite ? 'Remove from Favorites' : 'Save to Favorites',

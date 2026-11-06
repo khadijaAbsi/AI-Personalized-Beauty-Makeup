@@ -38,21 +38,31 @@ class SavedLooksService {
 
   static IconData _iconFromKey(String? name) {
     switch (name) {
-      case 'sun': return Icons.wb_sunny_outlined;
-      case 'office': return Icons.work_outline;
-      case 'party': return Icons.celebration_outlined;
-      case 'twilight': return Icons.wb_twilight;
-      case 'spa': return Icons.spa_outlined;
-      case 'heart': return Icons.favorite_border;
-      default: return Icons.auto_awesome;
+      case 'sun':
+        return Icons.wb_sunny_outlined;
+      case 'office':
+        return Icons.work_outline;
+      case 'party':
+        return Icons.celebration_outlined;
+      case 'twilight':
+        return Icons.wb_twilight;
+      case 'spa':
+        return Icons.spa_outlined;
+      case 'heart':
+        return Icons.favorite_border;
+      default:
+        return Icons.auto_awesome;
     }
   }
 
   static SavedLook _fromRow(Map<String, dynamic> row) {
     final saved = DateTime.tryParse(row['created_at']?.toString() ?? '');
     final days = saved == null ? 0 : DateTime.now().difference(saved).inDays;
-    final label = days <= 0 ? 'Saved just now'
-        : days == 1 ? 'Saved 1 day ago' : 'Saved $days days ago';
+    final label = days <= 0
+        ? 'Saved just now'
+        : days == 1
+        ? 'Saved 1 day ago'
+        : 'Saved $days days ago';
     return SavedLook(
       id: row['id'].toString(),
       title: row['title'] as String,
@@ -80,8 +90,11 @@ class SavedLooksService {
   }
 
   static Future<void> _fetch(String ownerId) async {
-    final rows = await _client.from('saved_looks')
-        .select('id,title,occasion,description,preview_color,preview_icon,created_at')
+    final rows = await _client
+        .from('saved_looks')
+        .select(
+          'id,title,occasion,description,preview_color,preview_icon,created_at',
+        )
         .eq('user_id', ownerId)
         .order('created_at', ascending: false);
     if (_ownerId != ownerId || _client.auth.currentUser?.id != ownerId) return;
@@ -94,7 +107,9 @@ class SavedLooksService {
 
   static bool isSaved(String title, String occasion) {
     _checkAccount();
-    return _looks.any((item) => item.title == title && item.occasion == occasion);
+    return _looks.any(
+      (item) => item.title == title && item.occasion == occasion,
+    );
   }
 
   Future<List<SavedLook>> fetchSavedLooks() async {
@@ -113,14 +128,20 @@ class SavedLooksService {
     final ownerId = _client.auth.currentUser?.id;
     if (ownerId == null) throw StateError('Please log in to save looks.');
     if (isSaved(title, occasion)) return;
-    final row = await _client.from('saved_looks').insert({
-      'user_id': ownerId,
-      'title': title,
-      'occasion': occasion,
-      'description': description,
-      'preview_color': previewColor.toARGB32(),
-      'preview_icon': _iconKey(previewIcon),
-    }).select('id,title,occasion,description,preview_color,preview_icon,created_at').single();
+    final row = await _client
+        .from('saved_looks')
+        .insert({
+          'user_id': ownerId,
+          'title': title,
+          'occasion': occasion,
+          'description': description,
+          'preview_color': previewColor.toARGB32(),
+          'preview_icon': _iconKey(previewIcon),
+        })
+        .select(
+          'id,title,occasion,description,preview_color,preview_icon,created_at',
+        )
+        .single();
     if (_client.auth.currentUser?.id != ownerId) return;
     _looks.insert(0, _fromRow(row));
     _notify();
@@ -134,21 +155,30 @@ class SavedLooksService {
     required IconData previewIcon,
   }) async {
     await ensureLoaded();
-    final existing = _looks.where((l) => l.title == title && l.occasion == occasion);
+    final existing = _looks.where(
+      (l) => l.title == title && l.occasion == occasion,
+    );
     if (existing.isNotEmpty) {
       await removeLook(existing.first);
     } else {
-      await saveLook(title: title, occasion: occasion,
-          description: description, previewColor: previewColor,
-          previewIcon: previewIcon);
+      await saveLook(
+        title: title,
+        occasion: occasion,
+        description: description,
+        previewColor: previewColor,
+        previewIcon: previewIcon,
+      );
     }
   }
 
   static Future<void> removeLook(SavedLook look) async {
     final ownerId = _client.auth.currentUser?.id;
     if (ownerId == null) throw StateError('Please log in first.');
-    await _client.from('saved_looks').delete()
-        .eq('user_id', ownerId).eq('id', look.id);
+    await _client
+        .from('saved_looks')
+        .delete()
+        .eq('user_id', ownerId)
+        .eq('id', look.id);
     if (_client.auth.currentUser?.id != ownerId) return;
     _looks.removeWhere((item) => item.id == look.id);
     _notify();
@@ -156,8 +186,12 @@ class SavedLooksService {
 
   /// Undo stores the look again. The database allocates a new row ID.
   static Future<void> restoreLook(SavedLook look, int index) async {
-    await saveLook(title: look.title, occasion: look.occasion,
-        description: look.description, previewColor: look.previewColor,
-        previewIcon: look.previewIcon);
+    await saveLook(
+      title: look.title,
+      occasion: look.occasion,
+      description: look.description,
+      previewColor: look.previewColor,
+      previewIcon: look.previewIcon,
+    );
   }
 }
