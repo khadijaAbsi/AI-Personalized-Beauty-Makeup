@@ -52,3 +52,51 @@ app.*.map.json
 
 # Supabase temporary local files
 /supabase/.temp/
+
+# =====================================
+# GlowAI - Python Backend
+# =====================================
+
+# Python virtual environments
+backend/.venv/
+backend/venv/
+**/__pycache__/
+*.py[cod]
+
+# Python testing and cache
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# AI model weights
+backend/model_weights/
+*.onnx
+*.pth
+*.pt
+*.ckpt
+*.task
+*.safetensors
+
+# Test images and datasets
+backend/test_images/
+backend/evaluation_data/
+backend/evaluation_reports/
+backend/datasets/
+backend/checkpoints/
+backend/runs/
+
+# Local databases
+backend/**/*.db
+backend/**/*.sqlite
+backend/**/*.sqlite3
+
+# Training archives
+backend/**/*.zip
+backend/**/*.tar
