@@ -100,3 +100,14 @@ backend/**/*.sqlite3
 # Training archives
 backend/**/*.zip
 backend/**/*.tar
+
+# Flutter generated files
+/frontend/build/
+/frontend/.dart_tool/
+/frontend/.flutter-plugins
+/frontend/.flutter-plugins-dependencies
+
+# Local environment files
+.env
+.env.*
+!.env.example
